@@ -470,10 +470,16 @@ function App() {
   const rightPad  = isMobile ? 20 : Math.round(Math.min(64, contentW * 0.045));
   const leftPad   = isMobile ? 20 : Math.round(Math.min(56, contentW * 0.04));
 
-  // ── flyer row: 10 cards visible, bigger size ───
+  // ── flyer row: card count based on window width breakpoints ───
   const visibleArea = contentW - leftPad - rightPad;
   const flyerGap  = 16;
-  const N_flyer   = isMobile ? 2 : isTablet ? 4 : 10;
+  const N_flyer   = isMobile ? 2 : isTablet ? 4 : 
+                    winW > 1920 ? 10 :
+                    winW > 1700 ? 9 :
+                    winW > 1500 ? 8 :
+                    winW > 1300 ? 7 :
+                    winW > 1100 ? 5 :
+                    winW > 1000 ? 4 : 4;
   const flyerW    = Math.round((visibleArea - flyerGap * (N_flyer - 1)) / N_flyer);
   const visibleFlyerCount = N_flyer;
   
