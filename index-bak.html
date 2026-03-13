@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KWAVE24 - Total Market</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    html { scrollbar-gutter: stable; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+// ── LOGO IMAGE ─────────────────────────────────────────────────────────────
+const LOGO_IMG = "images/logo_img.jpg";
+
+// ── SVG ICONS ─────────────────────────────────────────────────────────────
+const Icon = ({ children, size = 20, strokeWidth = 2 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+);
+
+const Icons = {
+  Menu: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></Icon>,
+  X: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>,
+  Search: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></Icon>,
+  ShoppingCart: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></Icon>,
+  MapPin: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></Icon>,
+  ChevronRight: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><polyline points="9 18 15 12 9 6"/></Icon>,
+  ChevronDown: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><polyline points="6 9 12 15 18 9"/></Icon>,
+  User: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>,
+  Newspaper: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></Icon>,
+  Sparkle: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z"/></Icon>,
+  Utensils: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></Icon>,
+  Beauty: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/><path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"/></Icon>,
+  Home: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>,
+  Monitor: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></Icon>,
+  ChefHat: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></Icon>,
+  Shirt: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></Icon>,
+  Dumbbell: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M6.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/><path d="M22.5 6.5a2.5 2.5 0 0 0-5 0v11a2.5 2.5 0 0 0 5 0v-11z"/><path d="M4 12h16"/></Icon>,
+  Baby: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></Icon>,
+  Music: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></Icon>,
+  Drama: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></Icon>,
+  Pencil: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></Icon>,
+  Pets: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></Icon>,
+  Store: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>,
+  Package: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></Icon>,
+  List: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></Icon>,
+  Heart: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></Icon>,
+  Settings: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></Icon>,
+  Zap: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>,
+  Gift: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></Icon>,
+  CreditCard: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></Icon>,
+  Tag: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></Icon>,
+  HelpCircle: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></Icon>,
+  ShoppingBag: ({ size, sw }) => <Icon size={size} strokeWidth={sw}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></Icon>,
+};
+
+// ── IMAGE URLS ─────────────────────────────────────────────────────────────
+const BANNER_IMG5 = 'images/banner_img5.png';
+const BANNER_IMG4 = 'images/banner_img4.png';
+const BANNER_IMG3 = 'images/banner_img3.png';
+const BANNER_IMG2 = 'images/banner_img2.png';
+const BANNER_IMG1 = 'images/banner_img1.png';
+const ORANGE_IMG = "images/orange_img.jpg";
+
+const IMG = {
+  apple:      "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=300&h=300&fit=crop",
+  clementine: ORANGE_IMG,
+  banana:     "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=300&h=300&fit=crop",
+  asianpear:  "https://images.unsplash.com/photo-1568909344668-6f14a07b56a0?w=300&h=300&fit=crop",
+  strawberry: "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=300&h=300&fit=crop",
+  grapes:     "https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=300&h=300&fit=crop",
+  jackfruit:  "https://images.unsplash.com/photo-1604599340287-2042e85a3802?w=300&h=300&fit=crop",
+  jalapeno:   "https://images.unsplash.com/photo-1526346698789-22fd84314424?w=300&h=300&fit=crop",
+  bokchoy:    "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=300&h=300&fit=crop",
+  potato:     "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&h=300&fit=crop",
+  broccoli:   "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=300&h=300&fit=crop",
+  cabbage:    "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=300&h=300&fit=crop",
+  sprouts:    "https://images.unsplash.com/photo-1515543904379-3d757aba1b37?w=300&h=300&fit=crop",
+  mint:       "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=300&h=300&fit=crop",
+  carrot:     "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=300&h=300&fit=crop",
+  mushroom:   "https://images.unsplash.com/photo-1548012639-d6e39c9de61b?w=300&h=300&fit=crop",
+  pepper:     "https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=300&h=300&fit=crop",
+  tofu:       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=300&fit=crop",
+  mayo:       "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&h=300&fit=crop",
+  choco:      "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=300&h=300&fit=crop",
+  dumpling:   "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=300&h=300&fit=crop",
+  milk:       "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&h=300&fit=crop",
+  ramen:      "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop",
+  yakult:     "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300&h=300&fit=crop",
+  pasta:      "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=300&fit=crop",
+  tomato:     "https://images.unsplash.com/photo-1558818498-28c1e002b655?w=300&h=300&fit=crop",
+};
+
+// ── CATEGORY PRODUCT DATA ─────────────────────────────────────────────────
+
+// Food - Korean Food & Snacks
+const FOOD = [
+  { id:1,  name:"Shin Ramyun Hot & Spicy",          brand:"Nongshim",   size:"5-pack",  price:6.99, original:9.99, off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop", images:[] },
+  { id:2,  name:"bibigo Mandu Pork Dumplings",      brand:"bibigo",     size:"24 oz",   price:8.99, original:12.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1534482421-64566f976cfa?w=300&h=300&fit=crop", images:[] },
+  { id:3,  name:"Lotte Choco Pie Original",         brand:"Lotte",      size:"12 ct",   price:5.99, original:8.99, off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=300&h=300&fit=crop", images:[] },
+  { id:4,  name:"Kimchi Traditional",               brand:"Jonggajip",  size:"32 oz",   price:7.49, original:10.99,off:"32% off", badge:"Organic",    img:"https://images.unsplash.com/photo-1617692855027-33b14f061079?w=300&h=300&fit=crop", images:[] },
+  { id:5,  name:"Binggrae Banana Milk",             brand:"Binggrae",   size:"6-pack",  price:8.99, original:12.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&h=300&fit=crop", images:[] },
+  { id:6,  name:"Tteokbokki Rice Cake",             brand:"CJ",         size:"21 oz",   price:4.99, original:7.49, off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=300&h=300&fit=crop", images:[] },
+  { id:7,  name:"Korean BBQ Sauce Bulgogi",         brand:"CJ",         size:"16 oz",   price:5.49, original:7.99, off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=300&h=300&fit=crop", images:[] },
+  { id:8,  name:"Yakult Probiotic Drink",           brand:"Yakult",     size:"10 ct",   price:5.99, original:8.99, off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300&h=300&fit=crop", images:[] },
+  { id:9,  name:"Gochujang Red Pepper Paste",       brand:"Haechandle", size:"17.6 oz", price:6.49, original:9.49, off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=300&h=300&fit=crop", images:[] },
+  { id:10, name:"Korean Seaweed Snack",             brand:"Dongwon",    size:"12 ct",   price:3.99, original:5.99, off:"33% off", badge:"Organic",    img:"https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=300&h=300&fit=crop", images:[] },
+  { id:11, name:"Honey Butter Chips",               brand:"Haitai",     size:"7.76 oz", price:4.49, original:6.49, off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=300&h=300&fit=crop", images:[] },
+  { id:12, name:"Korean Fried Chicken Mix",         brand:"CJ",         size:"2.2 lb",  price:7.99, original:11.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1569058242567-93de6f36f8e6?w=300&h=300&fit=crop", images:[] },
+];
+
+// Beauty - K-Beauty Products
+const BEAUTY = [
+  { id:20, name:"COSRX Snail Mucin Essence",        brand:"COSRX",         size:"100ml",   price:19.99,original:28.99,off:"31% off", badge:"Best Seller",img:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop", images:[] },
+  { id:21, name:"Laneige Lip Sleeping Mask",        brand:"Laneige",       size:"20g",     price:18.99,original:26.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop", images:[] },
+  { id:22, name:"Innisfree Green Tea Serum",        brand:"Innisfree",     size:"80ml",    price:22.99,original:32.99,off:"30% off", badge:"Organic",    img:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=300&h=300&fit=crop", images:[] },
+  { id:23, name:"Etude House Sheet Mask Set",       brand:"Etude",         size:"10 ct",   price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=300&h=300&fit=crop", images:[] },
+  { id:24, name:"MISSHA BB Cream SPF42",            brand:"MISSHA",        size:"50ml",    price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300&h=300&fit=crop", images:[] },
+  { id:25, name:"Some By Mi AHA BHA PHA Toner",     brand:"Some By Mi",    size:"150ml",   price:16.99,original:24.99,off:"32% off", badge:"Best Seller",img:"https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&h=300&fit=crop", images:[] },
+  { id:26, name:"Sulwhasoo First Care Serum",       brand:"Sulwhasoo",     size:"60ml",    price:54.99,original:79.99,off:"31% off", badge:"Premium",    img:"https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=300&h=300&fit=crop", images:[] },
+  { id:27, name:"Heimish All Clean Balm",           brand:"Heimish",       size:"120ml",   price:15.99,original:22.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=300&h=300&fit=crop", images:[] },
+  { id:28, name:"BENTON Aloe Propolis Gel",         brand:"BENTON",        size:"100ml",   price:13.99,original:19.99,off:"30% off", badge:"Organic",    img:"https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?w=300&h=300&fit=crop", images:[] },
+  { id:29, name:"Peripera Ink Velvet Lip Tint",     brand:"Peripera",      size:"4g",      price:9.99, original:14.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop", images:[] },
+  { id:30, name:"Klairs Supple Preparation Toner",  brand:"Klairs",        size:"180ml",   price:17.99,original:25.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&h=300&fit=crop", images:[] },
+  { id:31, name:"Dr. Jart+ Ceramidin Cream",        brand:"Dr. Jart+",     size:"50ml",    price:38.99,original:54.99,off:"29% off", badge:"Premium",    img:"https://images.unsplash.com/photo-1570194065650-d99fb4b38b15?w=300&h=300&fit=crop", images:[] },
+];
+
+// Home - Home & Living
+const HOME = [
+  { id:40, name:"Korean Ceramic Vase Set",          size:"3 pcs",   price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=300&h=300&fit=crop" },
+  { id:41, name:"Bamboo Organizer Box",             size:"Large",   price:19.99,original:29.99,off:"33% off", badge:"Eco",        img:"https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=300&h=300&fit=crop" },
+  { id:42, name:"Korean Cotton Bedding Set",        size:"Queen",   price:79.99,original:119.99,off:"33% off",badge:null,         img:"https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=300&h=300&fit=crop" },
+  { id:43, name:"Minimalist Desk Lamp LED",         size:"1 each",  price:34.99,original:49.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&h=300&fit=crop" },
+  { id:44, name:"Soy Wax Candle Set",               size:"4 ct",    price:24.99,original:36.99,off:"32% off", badge:"Organic",    img:"https://images.unsplash.com/photo-1603006905003-be475563bc59?w=300&h=300&fit=crop" },
+  { id:45, name:"Korean Floor Cushion",             size:"45cm",    price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&h=300&fit=crop" },
+  { id:46, name:"Diffuser & Reed Set Lavender",     size:"200ml",   price:18.99,original:27.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=300&h=300&fit=crop" },
+  { id:47, name:"Cotton Bath Towel Set",            size:"4 pcs",   price:26.99,original:39.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1583845112203-29329902332e?w=300&h=300&fit=crop" },
+  { id:48, name:"Wall Art Print Korean",            size:"16x20",   price:15.99,original:22.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=300&h=300&fit=crop" },
+  { id:49, name:"Ceramic Planter Pot",              size:"6 inch",  price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=300&h=300&fit=crop" },
+  { id:50, name:"Storage Basket Woven",             size:"Medium",  price:16.99,original:24.99,off:"32% off", badge:"Eco",        img:"https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=300&fit=crop" },
+  { id:51, name:"Linen Throw Blanket",              size:"50x60",   price:39.99,original:59.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?w=300&h=300&fit=crop" },
+];
+
+// Electronics
+const ELECTRONICS = [
+  { id:60, name:"Samsung Galaxy Buds Pro",          size:"1 pair",  price:149.99,original:199.99,off:"25% off",badge:"Best Seller",img:"https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&h=300&fit=crop" },
+  { id:61, name:"USB-C Fast Charger 65W",           size:"1 each",  price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300&h=300&fit=crop" },
+  { id:62, name:"Wireless Charging Pad",            size:"1 each",  price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1622675363311-3e1904dc1885?w=300&h=300&fit=crop" },
+  { id:63, name:"Portable Power Bank 20000mAh",     size:"1 each",  price:34.99,original:49.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=300&h=300&fit=crop" },
+  { id:64, name:"Bluetooth Speaker Mini",           size:"1 each",  price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=300&h=300&fit=crop" },
+  { id:65, name:"LED Ring Light 10 inch",           size:"1 set",   price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=300&h=300&fit=crop" },
+  { id:66, name:"Phone Stand Adjustable",           size:"1 each",  price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop" },
+  { id:67, name:"USB Hub 7-Port",                   size:"1 each",  price:27.99,original:39.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1625842268584-8f3296236761?w=300&h=300&fit=crop" },
+  { id:68, name:"Webcam HD 1080p",                  size:"1 each",  price:44.99,original:64.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1587826080692-f439cd0b70da?w=300&h=300&fit=crop" },
+  { id:69, name:"Cable Organizer Set",              size:"6 pcs",   price:9.99, original:14.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop" },
+  { id:70, name:"Smart LED Strip Lights",           size:"16ft",    price:18.99,original:27.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop" },
+  { id:71, name:"Laptop Stand Aluminum",            size:"1 each",  price:32.99,original:47.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop" },
+];
+
+// Kitchen & Dining
+const KITCHEN = [
+  { id:80, name:"Korean Earthenware Pot Dolsot",    size:"Medium",  price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1585515320310-259814833e62?w=300&h=300&fit=crop" },
+  { id:81, name:"Stainless Steel Chopsticks Set",   size:"5 pairs", price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop" },
+  { id:82, name:"Korean BBQ Grill Pan",             size:"12 inch", price:34.99,original:49.99,off:"30% off", badge:"Best Seller",img:"https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&h=300&fit=crop" },
+  { id:83, name:"Rice Cooker Digital 6-Cup",        size:"1 each",  price:59.99,original:89.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=300&fit=crop" },
+  { id:84, name:"Ceramic Bowl Set Korean",          size:"4 ct",    price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1603199506016-b9a594b593c0?w=300&h=300&fit=crop" },
+  { id:85, name:"Bamboo Cutting Board",             size:"Large",   price:18.99,original:27.99,off:"32% off", badge:"Eco",        img:"https://images.unsplash.com/photo-1594226801341-41427b4e5c22?w=300&h=300&fit=crop" },
+  { id:86, name:"Electric Kettle 1.7L",             size:"1 each",  price:32.99,original:47.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1594226801341-41427b4e5c22?w=300&h=300&fit=crop" },
+  { id:87, name:"Korean Side Dish Plates",          size:"6 ct",    price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1603199506016-b9a594b593c0?w=300&h=300&fit=crop" },
+  { id:88, name:"Stainless Steel Ladle Set",        size:"3 pcs",   price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=300&h=300&fit=crop" },
+  { id:89, name:"Glass Food Container Set",         size:"10 ct",   price:26.99,original:39.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=300&h=300&fit=crop" },
+  { id:90, name:"Silicone Spatula Set",             size:"5 pcs",   price:11.99,original:17.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=300&fit=crop" },
+  { id:91, name:"Tea Pot Ceramic",                  size:"800ml",   price:27.99,original:39.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1594226801341-41427b4e5c22?w=300&h=300&fit=crop" },
+];
+
+// Fashion
+const FASHION = [
+  { id:100, name:"Korean Street Style Hoodie",      size:"M-XL",    price:39.99,original:59.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&h=300&fit=crop" },
+  { id:101, name:"Minimalist Canvas Tote Bag",      size:"1 each",  price:18.99,original:27.99,off:"32% off", badge:"Eco",        img:"https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&h=300&fit=crop" },
+  { id:102, name:"Korean Fashion Cap",              size:"One Size",price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=300&h=300&fit=crop" },
+  { id:103, name:"Silk Scarf Korean Pattern",       size:"35x35",   price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=300&h=300&fit=crop" },
+  { id:104, name:"Oversized Cotton T-Shirt",        size:"S-XXL",   price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop" },
+  { id:105, name:"Korean Socks Gift Set",           size:"5 pairs", price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=300&h=300&fit=crop" },
+  { id:106, name:"Crossbody Mini Bag",              size:"1 each",  price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&h=300&fit=crop" },
+  { id:107, name:"Beanie Hat Knitted",              size:"One Size",price:11.99,original:17.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=300&h=300&fit=crop" },
+  { id:108, name:"Wide Leg Pants Korean Style",     size:"S-XL",    price:34.99,original:49.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=300&h=300&fit=crop" },
+  { id:109, name:"Hair Clips Set Minimalist",       size:"12 pcs",  price:8.99, original:12.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=300&h=300&fit=crop" },
+  { id:110, name:"Canvas Sneakers White",           size:"5-11",    price:44.99,original:64.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=300&h=300&fit=crop" },
+  { id:111, name:"Bucket Hat Summer",               size:"One Size",price:16.99,original:24.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1521369909029-2afed882baee?w=300&h=300&fit=crop" },
+];
+
+// Wellness & Sports
+const WELLNESS = [
+  { id:120, name:"Yoga Mat Non-Slip Premium",       size:"6mm",     price:29.99,original:44.99,off:"33% off", badge:"Eco",        img:"https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=300&h=300&fit=crop" },
+  { id:121, name:"Stainless Steel Water Bottle",    size:"32 oz",   price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=300&h=300&fit=crop" },
+  { id:122, name:"Resistance Bands Set",            size:"5 levels",price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=300&h=300&fit=crop" },
+  { id:123, name:"Korean Red Ginseng Extract",      size:"100g",    price:49.99,original:74.99,off:"33% off", badge:"Premium",    img:"https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=300&h=300&fit=crop" },
+  { id:124, name:"Foam Roller Muscle Recovery",     size:"18 inch", price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop" },
+  { id:125, name:"Vitamin C 1000mg Korean",         size:"120 ct",  price:18.99,original:27.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=300&fit=crop" },
+  { id:126, name:"Jump Rope Speed Weighted",        size:"1 each",  price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=300&h=300&fit=crop" },
+  { id:127, name:"Collagen Peptides Powder",        size:"300g",    price:34.99,original:49.99,off:"30% off", badge:"Best Seller",img:"https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=300&fit=crop" },
+  { id:128, name:"Massage Gun Deep Tissue",         size:"1 each",  price:69.99,original:99.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop" },
+  { id:129, name:"Workout Gloves Premium",          size:"S-XL",    price:16.99,original:24.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop" },
+  { id:130, name:"Protein Shaker Bottle",           size:"28 oz",   price:11.99,original:17.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=300&h=300&fit=crop" },
+  { id:131, name:"Omega-3 Fish Oil Korean",         size:"180 ct",  price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=300&fit=crop" },
+];
+
+// Baby & Kids
+const BABY_KIDS = [
+  { id:140, name:"Baby Soft Cotton Bodysuit",       size:"0-12M",   price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=300&h=300&fit=crop" },
+  { id:141, name:"Kids Wooden Building Blocks",     size:"50 pcs",  price:24.99,original:36.99,off:"32% off", badge:"Eco",        img:"https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=300&h=300&fit=crop" },
+  { id:142, name:"Baby Bottle Set BPA Free",        size:"3 ct",    price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=300&h=300&fit=crop" },
+  { id:143, name:"Kids Korean Hanbok Dress",        size:"3-5Y",    price:44.99,original:64.99,off:"31% off", badge:"Traditional",img:"https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=300&h=300&fit=crop" },
+  { id:144, name:"Baby Teething Toy Set",           size:"4 pcs",   price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=300&h=300&fit=crop" },
+  { id:145, name:"Kids Educational Puzzle",         size:"100 pcs", price:16.99,original:24.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=300&h=300&fit=crop" },
+  { id:146, name:"Baby Organic Lotion",             size:"8 oz",    price:11.99,original:17.99,off:"33% off", badge:"Organic",    img:"https://images.unsplash.com/photo-1594226801341-41427b4e5c22?w=300&h=300&fit=crop" },
+  { id:147, name:"Kids Backpack Animal Design",     size:"1 each",  price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=300&fit=crop" },
+  { id:148, name:"Baby Blanket Soft Fleece",        size:"30x40",   price:18.99,original:27.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&h=300&fit=crop" },
+  { id:149, name:"Kids Art Supply Set",             size:"120 pcs", price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+];
+
+// K-POP
+const KPOP = [
+  { id:160, name:"BTS Official Light Stick",        size:"1 each",  price:49.99,original:69.99,off:"29% off", badge:"Official",   img:"https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&h=300&fit=crop" },
+  { id:161, name:"BLACKPINK Album Collection",      size:"1 album", price:24.99,original:34.99,off:"29% off", badge:null,         img:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop" },
+  { id:162, name:"K-POP Photo Card Binder",         size:"1 each",  price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?w=300&h=300&fit=crop" },
+  { id:163, name:"BTS Poster Set Official",         size:"4 pcs",   price:19.99,original:29.99,off:"33% off", badge:"Official",   img:"https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&h=300&fit=crop" },
+  { id:164, name:"K-POP Lightstick Keychain",       size:"1 each",  price:9.99, original:14.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop" },
+  { id:165, name:"NewJeans Merch T-Shirt",          size:"S-XL",    price:34.99,original:49.99,off:"30% off", badge:"Official",   img:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=300&h=300&fit=crop" },
+  { id:166, name:"SEVENTEEN Album",                 size:"1 album", price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop" },
+  { id:167, name:"K-POP Sticker Pack",              size:"100 pcs", price:7.99, original:11.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?w=300&h=300&fit=crop" },
+  { id:168, name:"Stray Kids Official Hoodie",      size:"M-XXL",   price:54.99,original:79.99,off:"31% off", badge:"Official",   img:"https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&h=300&fit=crop" },
+  { id:169, name:"TWICE Photo Book",                size:"1 each",  price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?w=300&h=300&fit=crop" },
+];
+
+// K-Culture
+const KCULTURE = [
+  { id:180, name:"Korean Drama DVD Box Set",        size:"10 disc", price:49.99,original:74.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=300&fit=crop" },
+  { id:181, name:"Hangul Learning Book",            size:"1 each",  price:18.99,original:27.99,off:"32% off", badge:"Best Seller",img:"https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=300&fit=crop" },
+  { id:182, name:"Korean Calligraphy Set",          size:"1 set",   price:34.99,original:49.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+  { id:183, name:"Traditional Tea Ceremony Set",    size:"6 pcs",   price:44.99,original:64.99,off:"31% off", badge:"Traditional",img:"https://images.unsplash.com/photo-1594226801341-41427b4e5c22?w=300&h=300&fit=crop" },
+  { id:184, name:"Korean Folk Music CD",            size:"1 each",  price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop" },
+  { id:185, name:"Korean History Book",             size:"1 each",  price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=300&fit=crop" },
+  { id:186, name:"Korean Fan Traditional",          size:"1 each",  price:16.99,original:24.99,off:"32% off", badge:"Handmade",   img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+  { id:187, name:"K-Drama OST Collection",          size:"2 CD",    price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop" },
+  { id:188, name:"Korean Language Flashcards",      size:"200 pcs", price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?w=300&h=300&fit=crop" },
+  { id:189, name:"Traditional Mask Decoration",     size:"1 each",  price:22.99,original:32.99,off:"30% off", badge:"Handmade",   img:"https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&h=300&fit=crop" },
+];
+
+// Office Supplies
+const OFFICE = [
+  { id:200, name:"Korean Stationery Set",           size:"10 pcs",  price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+  { id:201, name:"Minimalist Desk Organizer",       size:"1 each",  price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=300&h=300&fit=crop" },
+  { id:202, name:"Gel Pen Set Pastel Colors",       size:"12 ct",   price:9.99, original:14.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+  { id:203, name:"Cute Sticky Notes Set",           size:"600 pcs", price:8.99, original:12.99,off:"31% off", badge:null,         img:"https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?w=300&h=300&fit=crop" },
+  { id:204, name:"Planner 2026 Korean Style",       size:"1 each",  price:18.99,original:27.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=300&fit=crop" },
+  { id:205, name:"Washi Tape Collection",           size:"20 rolls",price:12.99,original:18.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+  { id:206, name:"Acrylic Tape Dispenser",          size:"1 each",  price:11.99,original:17.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=300&h=300&fit=crop" },
+  { id:207, name:"File Folder Set Pastel",          size:"12 ct",   price:16.99,original:24.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?w=300&h=300&fit=crop" },
+  { id:208, name:"Desk Mat Large",                  size:"35x17",   price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=300&h=300&fit=crop" },
+  { id:209, name:"Pen Holder Ceramic",              size:"1 each",  price:13.99,original:19.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=300&h=300&fit=crop" },
+];
+
+// Pets
+const PETS = [
+  { id:220, name:"Premium Dog Food Korean",         size:"5 lb",    price:29.99,original:44.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=300&h=300&fit=crop" },
+  { id:221, name:"Cat Scratching Post Tower",       size:"1 each",  price:49.99,original:74.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=300&h=300&fit=crop" },
+  { id:222, name:"Pet Grooming Brush Set",          size:"3 pcs",   price:14.99,original:21.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&h=300&fit=crop" },
+  { id:223, name:"Dog Treat Korean Style",          size:"16 oz",   price:12.99,original:18.99,off:"32% off", badge:"Natural",    img:"https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=300&h=300&fit=crop" },
+  { id:224, name:"Cat Toy Interactive Set",         size:"10 pcs",  price:16.99,original:24.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=300&h=300&fit=crop" },
+  { id:225, name:"Pet Bed Soft Plush",              size:"Medium",  price:34.99,original:49.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300&h=300&fit=crop" },
+  { id:226, name:"Dog Leash & Collar Set",          size:"M/L",     price:19.99,original:29.99,off:"33% off", badge:null,         img:"https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=300&h=300&fit=crop" },
+  { id:227, name:"Cat Food Premium Korean",         size:"4 lb",    price:24.99,original:36.99,off:"32% off", badge:null,         img:"https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=300&h=300&fit=crop" },
+  { id:228, name:"Pet Water Fountain",              size:"2L",      price:27.99,original:39.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&h=300&fit=crop" },
+  { id:229, name:"Dog Raincoat Waterproof",         size:"S-XL",    price:22.99,original:32.99,off:"30% off", badge:null,         img:"https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=300&h=300&fit=crop" },
+];
+
+const ALL_PRODUCTS = [...FOOD, ...BEAUTY, ...HOME, ...ELECTRONICS, ...KITCHEN, ...FASHION, ...WELLNESS, ...BABY_KIDS, ...KPOP, ...KCULTURE, ...OFFICE, ...PETS];
+// ── FLYER STORES (for Flyers page) ────────────────────────────────────────────
+const FLYER_STORES = [
+  {
+    id: "hmart",
+    name: "H Mart",
+    dateRange: "Mar 4-10",
+    color: "#C41230",
+    products: [
+      { id:301, name:"Shin Ramyun Hot & Spicy 5-Pack", size:"5-pack", price:5.49, original:8.99, off:"39% off", deal:"Buy 2 for $10", badge:null, img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop" },
+      { id:302, name:"bibigo Mandu Pork Dumplings", size:"24 oz", price:7.49, original:11.99, off:"38% off", deal:"Buy 2 for $14", badge:null, img:"https://images.unsplash.com/photo-1534482421-64566f976cfa?w=300&h=300&fit=crop" },
+      { id:303, name:"Korean Kimchi Traditional", size:"32 oz", price:6.99, original:10.99, off:"36% off", deal:"Buy 2 for $12", badge:"Organic", img:"https://images.unsplash.com/photo-1617692855027-33b14f061079?w=300&h=300&fit=crop" },
+      { id:304, name:"Binggrae Banana Milk 6-Pack", size:"6-pack", price:7.99, original:12.99, off:"38% off", deal:"Buy 2 for $14", badge:null, img:"https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&h=300&fit=crop" },
+      { id:305, name:"Tteokbokki Rice Cake", size:"21 oz", price:3.99, original:6.49, off:"39% off", deal:"Buy 3 for $10", badge:null, img:"https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=300&h=300&fit=crop" },
+      { id:306, name:"COSRX Snail Mucin Essence", size:"100ml", price:16.99, original:25.99, off:"35% off", deal:"$9 off", badge:"Best Seller", img:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop" },
+      { id:307, name:"Laneige Lip Sleeping Mask", size:"20g", price:15.99, original:24.99, off:"36% off", deal:"$9 off", badge:null, img:"https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop" },
+      { id:308, name:"Korean BBQ Sauce Bulgogi", size:"16 oz", price:4.49, original:7.49, off:"40% off", deal:"Buy 2 for $8", badge:null, img:"https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=300&h=300&fit=crop" },
+      { id:309, name:"Gochujang Red Pepper Paste", size:"17.6 oz", price:5.49, original:8.99, off:"39% off", deal:"Buy 2 for $10", badge:null, img:"https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=300&h=300&fit=crop" },
+      { id:310, name:"Korean Seaweed Snack", size:"12 ct", price:2.99, original:5.49, off:"46% off", deal:"Buy 3 for $8", badge:"Organic", img:"https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=300&h=300&fit=crop" },
+    ]
+  },
+  {
+    id: "zion",
+    name: "Zion Market",
+    dateRange: "Mar 2-14",
+    color: "#003d2b",
+    products: [
+      { id:311, name:"Korean Fried Chicken Mix", size:"2.2 lb", price:6.49, original:10.99, off:"41% off", deal:"$4.50 off", badge:null, img:"https://images.unsplash.com/photo-1569058242567-93de6f36f8e6?w=300&h=300&fit=crop" },
+      { id:312, name:"Honey Butter Chips", size:"7.76 oz", price:3.49, original:5.99, off:"42% off", deal:"Buy 3 for $9", badge:null, img:"https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=300&h=300&fit=crop" },
+      { id:313, name:"Yakult Probiotic Drink", size:"10 ct", price:4.99, original:7.99, off:"38% off", deal:"Buy 2 for $9", badge:null, img:"https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300&h=300&fit=crop" },
+      { id:314, name:"Lotte Choco Pie Original", size:"12 ct", price:4.99, original:7.99, off:"38% off", deal:"Buy 2 for $9", badge:null, img:"https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=300&h=300&fit=crop" },
+      { id:315, name:"Innisfree Green Tea Serum", size:"80ml", price:19.99, original:31.99, off:"38% off", deal:"$12 off", badge:"Organic", img:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=300&h=300&fit=crop" },
+      { id:316, name:"Samsung Galaxy Buds Pro", size:"1 ct", price:159.99, original:229.99, off:"30% off", deal:"$70 off", badge:"Hot", img:"https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=300&h=300&fit=crop" },
+      { id:317, name:"Korean Rice Wine Makgeolli", size:"750ml", price:5.99, original:9.99, off:"40% off", deal:"Buy 2 for $10", badge:null, img:"https://images.unsplash.com/photo-1516594798947-e65505dbb29d?w=300&h=300&fit=crop" },
+      { id:318, name:"Etude House Sheet Mask Set", size:"10 ct", price:9.99, original:16.99, off:"41% off", deal:"$7 off", badge:null, img:"https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=300&h=300&fit=crop" },
+      { id:319, name:"Korean Green Tea Matcha", size:"100g", price:11.99, original:18.99, off:"37% off", deal:"Buy 2 for $20", badge:"Premium", img:"https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=300&h=300&fit=crop" },
+      { id:320, name:"Samyang Buldak Hot Chicken", size:"5-pack", price:5.99, original:9.49, off:"37% off", deal:"Buy 2 for $10", badge:null, img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop" },
+    ]
+  },
+  {
+    id: "galleria",
+    name: "Galleria",
+    dateRange: "Mar 8-14",
+    color: "#6B21A8",
+    products: [
+      { id:321, name:"Korean Black Bean Noodles", size:"4-pack", price:4.99, original:7.99, off:"38% off", deal:"Buy 2 for $9", badge:null, img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop" },
+      { id:322, name:"Tiger Balm Pain Relieving", size:"18g", price:6.99, original:11.99, off:"42% off", deal:"$5 off", badge:null, img:"https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&h=300&fit=crop" },
+      { id:323, name:"Korean Pear Juice", size:"12-pack", price:8.99, original:14.99, off:"40% off", deal:"Buy 2 for $16", badge:"Popular", img:"https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=300&h=300&fit=crop" },
+      { id:324, name:"Missha Time Revolution Essence", size:"150ml", price:24.99, original:39.99, off:"38% off", deal:"$15 off", badge:"Best Seller", img:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop" },
+      { id:325, name:"Korean Red Ginseng Extract", size:"240g", price:34.99, original:54.99, off:"36% off", deal:"$20 off", badge:"Premium", img:"https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&h=300&fit=crop" },
+      { id:326, name:"Korean Dried Seaweed", size:"100 sheets", price:7.99, original:12.99, off:"38% off", deal:"Buy 2 for $14", badge:null, img:"https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=300&h=300&fit=crop" },
+      { id:327, name:"CJ Bibigo Seaweed Crisps", size:"5 oz", price:3.49, original:5.99, off:"42% off", deal:"Buy 3 for $9", badge:null, img:"https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=300&h=300&fit=crop" },
+      { id:328, name:"Korean Barley Tea", size:"30 bags", price:4.99, original:7.99, off:"38% off", deal:"Buy 2 for $9", badge:null, img:"https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=300&h=300&fit=crop" },
+      { id:329, name:"AMORE PACIFIC Moisture Cream", size:"50ml", price:29.99, original:47.99, off:"38% off", deal:"$18 off", badge:"Luxury", img:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=300&h=300&fit=crop" },
+      { id:330, name:"Korean Soju Original", size:"360ml", price:3.99, original:6.49, off:"39% off", deal:"Buy 3 for $10", badge:null, img:"https://images.unsplash.com/photo-1516594798947-e65505dbb29d?w=300&h=300&fit=crop" },
+    ]
+  },
+];
+
+
+const FEATURED_REVIEWS = [
+  { id: 91, username: "Cherry樱", date: "Mar 09, 2026", text: "This soup base is really delicious. The noodles can be cooked in 3 minutes...", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=100&h=100&fit=crop", productName: "Marutai Kumamoto Instant Noodles 186 g", productPrice: 3.79 },
+  { id: 92, username: "Joyce", date: "Mar 09, 2026", text: "This combines all the healthy ingredients in Chinese medicine and...", img: "https://images.unsplash.com/photo-1596591606975-97ee5cef3a1e?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1596591606975-97ee5cef3a1e?w=100&h=100&fit=crop", productName: "Haoxiangngi Jujube Sesame Pill 63 g", productPrice: 3.29 },
+  { id: 93, username: "weee.8656278", date: "Mar 08, 2026", text: "After cleaning it and an hour in the oven, it comes out so soft and...", img: "https://images.unsplash.com/photo-1596560548464-f010549b84d7?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1596560548464-f010549b84d7?w=100&h=100&fit=crop", productName: "Japanese Mini Sweet Potato 3 lb", productPrice: 6.99 },
+  { id: 94, username: "282865232", date: "Mar 08, 2026", text: "These mini sesame balls are small in size, but packed with red bean paste...", img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=100&h=100&fit=crop", productName: "Wei Chuan Frozen Sesame Ball", productPrice: 5.29 },
+  { id: 95, username: "Cathy Chen", date: "Mar 08, 2026", text: "super convenient to cook. Easy to clean the gutter and prepare for...", img: "https://images.unsplash.com/photo-1510130387422-82bed34b37e9?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1510130387422-82bed34b37e9?w=100&h=100&fit=crop", productName: "Wild Caught Dover Sole Whole 14-16 oz", productPrice: 4.99 },
+  { id: 96, username: "KBeautyFan", date: "Mar 07, 2026", text: "Amazing skincare product! My skin feels so smooth and hydrated after...", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=100&h=100&fit=crop", productName: "COSRX Snail Mucin Essence 100ml", productPrice: 19.99 },
+  { id: 97, username: "Seoul_Foodie", date: "Mar 07, 2026", text: "Best tteokbokki I've ever had! The sauce is perfectly spicy and sweet...", img: "https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=100&h=100&fit=crop", productName: "Tteokbokki Rice Cake 21 oz", productPrice: 4.99 },
+  { id: 98, username: "HomeChef_Kim", date: "Mar 06, 2026", text: "This dolsot pot makes the best bibimbap! The rice gets perfectly crispy...", img: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=100&h=100&fit=crop", productName: "Korean Earthenware Pot Dolsot", productPrice: 29.99 },
+  { id: 99, username: "K_Drama_Lover", date: "Mar 06, 2026", text: "Finally got my hands on this album! The packaging is beautiful and...", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop", productName: "BLACKPINK Album Collection", productPrice: 24.99 },
+  { id: 100, username: "HealthyLife_23", date: "Mar 05, 2026", text: "This red ginseng extract is amazing for energy! I take it every morning...", img: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=300&h=300&fit=crop", productImg: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=100&h=100&fit=crop", productName: "Korean Red Ginseng Extract 100g", productPrice: 49.99 },
+];
+
+
+// ── PRICE COMPONENT ─────────────────────────────────────────────────────────
+const Price = ({ value, size }) => {
+  const [d, c] = value.toFixed(2).split(".");
+  const fs = size === "lg" ? 20 : 16;
+  const ss = size === "lg" ? 11 : 9;
+  return (
+    <span style={{ fontWeight:800, fontSize:fs, lineHeight:1 }}>
+      <sup style={{ fontSize:ss, fontWeight:800, verticalAlign:"super" }}>$</sup>
+      {d}<sup style={{ fontSize:ss, fontWeight:800, verticalAlign:"super" }}>{c}</sup>
+    </span>
+  );
+};
+
+// ── useContainerWidth HOOK ─────────────────────────────────────────────────
+const useContainerWidth = (ref) => {
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver(([entry]) => setW(entry.contentRect.width));
+    ro.observe(ref.current);
+    setW(ref.current.offsetWidth);
+    return () => ro.disconnect();
+  }, []);
+  return w;
+};
+
+// ── ADD BUTTON ──────────────────────────────────────────────────────────────
+const AddBtn = ({ id, cart, onAdd, onRemove, small }) => {
+  const qty = cart[id] || 0;
+  const h = small ? 30 : 36;
+  if (qty === 0) return (
+    <button
+      onClick={e => { e.stopPropagation(); onAdd(id); }}
+      style={{
+        background:"linear-gradient(135deg, #E31937 0%, #B01030 100%)", color:"white", border:"none",
+        borderRadius:100,
+        padding: small ? "5px 12px" : "7px 16px",
+        cursor:"pointer", fontSize: small ? 12.5 : 14, fontWeight:700,
+        display:"flex", alignItems:"center", gap:5, whiteSpace:"nowrap",
+        boxShadow:"0 2px 10px rgba(200,20,48,0.35)", letterSpacing:"0.1px",
+        transition:"transform 0.15s, box-shadow 0.15s",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.03)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(200,20,48,0.4)"; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(200,20,48,0.35)"; }}
+    >
+      <span style={{ fontSize: small ? 17 : 20, fontWeight:300, lineHeight:1, marginTop:-1 }}>+</span>
+      Add
+    </button>
+  );
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:5 }} onClick={e => e.stopPropagation()}>
+      <button onClick={() => onRemove(id)}
+        style={{ width:h, height:h, borderRadius:"50%", border:"2px solid #C41230", background:"white", color:"#C41230", fontWeight:800, cursor:"pointer", fontSize: small?14:18, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 1px 4px rgba(0,0,0,0.12)", transition:"all 0.15s" }}>&#8722;</button>
+      <span style={{ fontWeight:800, minWidth:16, textAlign:"center", fontSize: small?13:15 }}>{qty}</span>
+      <button onClick={() => onAdd(id)}
+        style={{ width:h, height:h, borderRadius:"50%", border:"none", background:"linear-gradient(135deg, #E31937 0%, #B01030 100%)", color:"white", fontWeight:800, cursor:"pointer", fontSize: small?14:18, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 6px rgba(200,20,48,0.3)", transition:"all 0.15s" }}>+</button>
+    </div>
+  );
+};
+
+// ── FLYER CARD (from original kwave24-index_1.html) ─────────────────────────
+const FlyerCard = ({ p, onAdd, onRemove, cart, w = 168, onClick }) => {
+  const [hov, setHov] = useState(false);
+  const qty = cart[p.id] || 0;
+  return (
+    <div 
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      onClick={() => onClick && onClick(p)}
+      style={{
+        width:w, minWidth:0, flexShrink:0, background:"white", borderRadius:12,
+        overflow:"hidden", border:"none",
+        transform: hov ? "translateY(-2px)" : "translateY(0)",
+        transition:"all 0.2s ease",
+      display:"flex", flexDirection:"column", cursor:"pointer",
+    }}>
+      {/* Image — fixed height, not padding-bottom trick */}
+      <div style={{ position:"relative", width:w, height:w, background:"#f5f5f5", flexShrink:0, borderRadius:12, overflow:"hidden" }}>
+        <img
+          src={p.img} alt=""
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}
+        />
+
+        {p.badge && (
+          <span style={{
+            position:"absolute", top:10, left:10,
+            background:"rgba(240,240,240,0.95)", backdropFilter:"blur(4px)",
+            fontSize:10, fontWeight:700, borderRadius:6,
+            padding:"3px 8px", color:"#555",
+            border:"1px solid rgba(0,0,0,0.06)",
+          }}>{p.badge}</span>
+        )}
+
+        {/* Add / qty control */}
+        <div style={{ position:"absolute", top:10, right:10 }} onClick={(e) => e.stopPropagation()}>
+          {qty === 0 ? (
+            <button onClick={() => onAdd(p.id)} style={{
+              background:"linear-gradient(135deg, #E31937 0%, #B01030 100%)", color:"white", border:"none",
+              borderRadius:100, padding:"7px 14px",
+              cursor:"pointer", fontWeight:700, fontSize:13,
+              display:"flex", alignItems:"center", gap:5,
+              boxShadow:"0 2px 10px rgba(22,101,52,0.35)",
+              transition:"transform 0.15s, box-shadow 0.15s",
+            }}>
+              <span style={{ fontSize:17, fontWeight:300, lineHeight:1 }}>+</span> Add
+            </button>
+          ) : (
+            <div style={{
+              background:"linear-gradient(135deg, #E31937 0%, #B01030 100%)", borderRadius:100,
+              padding:"5px 10px", display:"flex", alignItems:"center", gap:7,
+              boxShadow:"0 2px 10px rgba(22,101,52,0.35)",
+            }}>
+              <button onClick={() => onRemove(p.id)} style={{ width:25, height:25, borderRadius:"50%", border:"none", background:"rgba(255,255,255,0.25)", color:"white", fontWeight:800, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s" }}>−</button>
+              <span style={{ color:"white", fontWeight:800, fontSize:13, minWidth:16, textAlign:"center" }}>{qty}</span>
+              <button onClick={() => onAdd(p.id)}  style={{ width:25, height:25, borderRadius:"50%", border:"none", background:"rgba(255,255,255,0.25)", color:"white", fontWeight:800, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s" }}>+</button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info */}
+      <div style={{ padding:"13px 15px 16px", flex:1 }}>
+        <div style={{ fontSize:11, color:"#aaa", textDecoration:"line-through", fontWeight:500 }}>${p.original.toFixed(2)}</div>
+        <div style={{ display:"flex", alignItems:"center", gap:7, margin:"4px 0 6px" }}>
+          <Price value={p.price} size="lg" />
+          <span style={{ fontSize:10, background:"#ffecec", color:"#d63031", fontWeight:800, borderRadius:6, padding:"3px 7px" }}>{p.off}</span>
+        </div>
+        <div style={{
+          fontWeight:600, fontSize:13, lineHeight:1.4, color:"#1a1a1a",
+          display:"-webkit-box", WebkitLineClamp:2,
+          WebkitBoxOrient:"vertical", overflow:"hidden", marginBottom:5,
+          letterSpacing:"-0.2px",
+        }}>{p.name}</div>
+        <div style={{ fontSize:11.5, color:"#999", fontWeight:500 }}>{p.size}</div>
+        <div style={{ fontSize:11, color:"#C41230", marginTop:7, display:"flex", alignItems:"center", gap:5, fontWeight:600 }}>
+          <span style={{ width:6, height:6, borderRadius:"50%", background:"#C41230", display:"inline-block" }} />
+          Many in stock
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+// ── REVIEW CARD ────────────────────────────────────────────────────────────
+const ReviewCard = ({ review, onAdd, w = 260 }) => (
+  <div style={{ width: w, flexShrink: 0, background: "white", borderRadius: 12, overflow: "hidden", border: "1px solid #f0f0f0" }}>
+    <div style={{ padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>👤</div>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#333" }}>{review.username}</div>
+        <div style={{ fontSize: 10, color: "#888" }}>{review.date}</div>
+      </div>
+    </div>
+    <div style={{ padding: "0 14px 10px", fontSize: 12, color: "#555", lineHeight: 1.5, height: 54, overflow: "hidden" }}>{review.text}</div>
+    <div style={{ width: "100%", height: w * 0.6, background: "#f8f8f8" }}>
+      <img src={review.img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+    </div>
+    <div style={{ padding: 10, display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid #f0f0f0" }}>
+      <img src={review.productImg} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: "cover" }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 500, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{review.productName}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#E31937" }}>${review.productPrice.toFixed(2)}</div>
+      </div>
+      <button onClick={() => onAdd && onAdd(review.id)} style={{ width: 26, height: 26, borderRadius: "50%", background: "#f3f4f6", border: "none", cursor: "pointer", fontSize: 14 }}>+</button>
+    </div>
+  </div>
+);
+
+// ── SECTION HEADER ─────────────────────────────────────────────────────────
+const SectionHeader = ({ title, sub, cta }) => (
+  <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
+    <div>
+      <h2 style={{ fontWeight: 800, fontSize: 20, color: "#0a0a0a", letterSpacing: "-0.3px" }}>{title}</h2>
+      {sub && <div style={{ fontSize: 13, color: "#777", marginTop: 4 }}>{sub}</div>}
+    </div>
+    {cta && <button style={{ background: "none", border: "none", color: "#C41230", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>{cta} <span style={{ fontSize: 15 }}>›</span></button>}
+  </div>
+);
+
+// ── PRODUCT DETAIL MODAL ─────────────────────────────────────────────────────
+const ProductDetailModal = ({ product, onClose, cart, onAdd, onRemove, allProducts }) => {
+  const [quantity, setQuantity] = useState(1);
+  const [expandedSection, setExpandedSection] = useState(null);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [modalWidth, setModalWidth] = useState(window.innerWidth);
+  const [selectedImg, setSelectedImg] = useState(0);
+  const modalRef = useRef(null);
+
+  // All product images: main + additional images array
+  const allImages = [product.img, ...(product.images || [])];
+  const brandName = product.brand || product.name.split(" ")[0];
+
+  const similarProducts = allProducts.filter(p => p.id !== product.id).slice(0, 4);
+  const itemsToAddNext = allProducts.filter(p => p.id !== product.id).slice(4, 10);
+  const isMobileModal = modalWidth < 700;
+
+  useEffect(() => {
+    const handleResize = () => setModalWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        if (isZoomed) setIsZoomed(false);
+        else onClose();
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose, isZoomed]);
+
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const AccordionSection = ({ title, children, id }) => (
+    <div style={{ borderBottom:"1px solid #f0f0f0" }}>
+      <div
+        onClick={() => toggleSection(id)}
+        style={{ padding:"14px 0", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", fontWeight:600, fontSize:14, color:"#1a1a1a" }}
+      >
+        {title}
+        <span style={{ fontSize:11, color:"#888", transition:"transform 0.2s", transform: expandedSection === id ? "rotate(180deg)" : "rotate(0)" }}>&#9660;</span>
+      </div>
+      {expandedSection === id && (
+        <div style={{ paddingBottom:16, fontSize:13, lineHeight:1.7, color:"#444" }}>{children}</div>
+      )}
+    </div>
+  );
+
+  const ZoomView = () => (
+    <div
+      onClick={() => setIsZoomed(false)}
+      style={{ position:"absolute", inset:0, zIndex:20, background:"white", display:"flex", flexDirection:"column", cursor:"zoom-out", animation:"fadeIn 0.2s ease-out" }}
+    >
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 24px", borderBottom:"1px solid #f0f0f0" }}>
+        <button onClick={() => setIsZoomed(false)} style={{ background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:14, fontWeight:600, color:"#333" }}>&larr; Back to product</button>
+        <div style={{ fontSize:14, fontWeight:600, color:"#333" }}>{product.name}</div>
+        <button onClick={() => setIsZoomed(false)} style={{ background:"#f5f5f5", border:"none", borderRadius:8, width:36, height:36, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>&times;</button>
+      </div>
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding: isMobileModal ? 16 : 40, background:"#fafafa" }}>
+        <img src={allImages[selectedImg]} alt={product.name} style={{ maxWidth:"100%", maxHeight:"calc(100vh - 200px)", objectFit:"contain", borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.08)" }} />
+      </div>
+      <div style={{ padding:"12px 24px", borderTop:"1px solid #f0f0f0", textAlign:"center", fontSize:12, color:"#888" }}>Click anywhere or press ESC to close</div>
+    </div>
+  );
+
+  return (
+    <>
+      <div onClick={handleBackdropClick} style={{ position:"fixed", inset:0, zIndex:1000, background:"rgba(0,0,0,0.5)", display:"flex", alignItems:isMobileModal ? "flex-end" : "flex-start", justifyContent:"center", padding: isMobileModal ? 0 : "40px 20px", overflowY:"auto", fontFamily:"'Noto Sans KR',sans-serif" }}>
+        <div ref={modalRef} style={{ background:"white", borderRadius: isMobileModal ? "16px 16px 0 0" : 16, width:"100%", maxWidth: isMobileModal ? "100%" : 1100, maxHeight: isMobileModal ? "95vh" : "calc(100vh - 80px)", overflowY:"auto", boxShadow:"0 25px 50px -12px rgba(0,0,0,0.25)", position:"relative" }}>
+          {isZoomed && <ZoomView />}
+
+          {/* Sticky Header */}
+          <div style={{ position:"sticky", top:0, zIndex:10, background:"white", borderBottom:"1px solid #f0f0f0", borderRadius: isMobileModal ? "16px 16px 0 0" : "16px 16px 0 0", padding: isMobileModal ? "12px 16px" : "16px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:14, fontWeight:600, color:"#333", padding:"8px 0" }}>&larr; Back</button>
+            <div style={{ display:"flex", gap:10 }}>
+              <button style={{ background:"#C41230", color:"white", border:"none", borderRadius:20, padding:"8px 18px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Delivery</button>
+              <button style={{ background:"white", border:"1px solid #ddd", borderRadius:20, padding:"8px 18px", fontSize:13, fontWeight:500, cursor:"pointer", color:"#666" }}>Pickup</button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div style={{ padding: isMobileModal ? "16px 16px 24px" : "24px 32px 32px" }}>
+            {/* TOP SECTION: Thumbnails + Image | Product Info */}
+            <div style={{ display: isMobileModal ? "flex" : "grid", flexDirection:"column", gridTemplateColumns: isMobileModal ? undefined : "minmax(340px, 480px) 1fr", gap: isMobileModal ? 20 : 36, marginBottom:24 }}>
+              {/* Left: Thumbnail gallery + Main image */}
+              <div style={{ display:"flex", gap: isMobileModal ? 8 : 12 }}>
+                {/* Thumbnail strip (vertical, left side) */}
+                <div style={{ display:"flex", flexDirection:"column", gap:8, flexShrink:0, width: isMobileModal ? 48 : 64 }}>
+                  {allImages.map((imgUrl, i) => (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedImg(i)}
+                      style={{
+                        width: isMobileModal ? 48 : 64, height: isMobileModal ? 48 : 64,
+                        borderRadius:8, overflow:"hidden", cursor:"pointer",
+                        border: selectedImg === i ? "2px solid #1a1a1a" : "1px solid #e0e0e0",
+                        background:"#f8f8f8", flexShrink:0,
+                        opacity: selectedImg === i ? 1 : 0.7,
+                        transition:"all 0.15s"
+                      }}
+                      onMouseEnter={e => { if (selectedImg !== i) e.currentTarget.style.opacity = "1"; }}
+                      onMouseLeave={e => { if (selectedImg !== i) e.currentTarget.style.opacity = "0.7"; }}
+                    >
+                      <img src={imgUrl} alt={`${product.name} ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Main image */}
+                <div
+                  onClick={() => setIsZoomed(true)}
+                  style={{ position:"relative", background:"#f8f8f8", borderRadius:12, overflow:"hidden", aspectRatio:"1", flex:1, display:"flex", alignItems:"center", justifyContent:"center", cursor:"zoom-in" }}
+                >
+                  {!imgLoaded && <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.5s infinite" }} />}
+                  <img src={allImages[selectedImg]} alt={product.name} onLoad={() => setImgLoaded(true)} style={{ width:"80%", height:"80%", objectFit:"contain", opacity: imgLoaded ? 1 : 0, transition:"opacity 0.3s" }} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsZoomed(true); }}
+                    style={{ position:"absolute", bottom:12, right:12, background:"white", border:"none", borderRadius:"50%", width:36, height:36, cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,0.12)", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", transition:"transform 0.15s" }}
+                    onMouseEnter={e => e.target.style.transform = "scale(1.1)"}
+                    onMouseLeave={e => e.target.style.transform = ""}
+                  >&#128269;</button>
+                </div>
+              </div>
+
+              {/* Right: Product Info + Save + Add to Cart */}
+              <div style={{ display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
+                <div>
+                  <h1 style={{ fontSize: isMobileModal ? 20 : 24, fontWeight:800, color:"#1a1a1a", lineHeight:1.3, marginBottom:4 }}>{product.name}</h1>
+                  <p style={{ fontSize:14, color:"#666", marginBottom:12 }}>{product.size}</p>
+
+                  {/* Shop all brand — links to brand page */}
+                  <a
+                    href={"#brand-" + encodeURIComponent(brandName)}
+                    onClick={(e) => { e.preventDefault(); /* TODO: navigate to brand page */ }}
+                    style={{ fontSize:14, color:"#C41230", cursor:"pointer", fontWeight:600, textDecoration:"underline", display:"inline-block", marginBottom:16 }}
+                  >Shop all {brandName}</a>
+
+                  {/* Accordion: Details + Free returns */}
+                  <div style={{ borderTop:"1px solid #f0f0f0" }}>
+                    <AccordionSection title="Details" id="details">
+                      <p>{product.description || "Premium quality Korean product. Carefully selected and sourced directly from top Korean brands for authentic quality."}</p>
+                    </AccordionSection>
+                    <AccordionSection title="Free returns within 15 days" id="returns">
+                      <p>We accept returns within 15 days of delivery. Items must be unopened and in original packaging. Contact us to initiate a return.</p>
+                    </AccordionSection>
+                  </div>
+
+                  {/* Save / Add to List */}
+                  <div style={{ display:"flex", gap:24, padding:"16px 0", borderBottom:"1px solid #f0f0f0" }}>
+                    <span style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, fontWeight:600, color:"#555", cursor:"pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.color="#C41230"}
+                      onMouseLeave={e => e.currentTarget.style.color="#555"}
+                    >&#9744; Save</span>
+                    <span style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, fontWeight:600, color:"#555", cursor:"pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.color="#C41230"}
+                      onMouseLeave={e => e.currentTarget.style.color="#555"}
+                    >&#9776; Add to Saved Items</span>
+                  </div>
+                </div>
+
+                {/* Price & Add to cart - bottom aligned */}
+                <div style={{ background:"#fafafa", borderRadius:16, padding:"20px 24px", marginTop:16 }}>
+                  <div style={{ fontSize:28, fontWeight:800, marginBottom:16 }}>
+                    ${product.price.toFixed(2)}
+                    {product.original && <span style={{ fontSize:14, color:"#888", textDecoration:"line-through", marginLeft:10, fontWeight:500 }}>${product.original.toFixed(2)}</span>}
+                    {product.off && <span style={{ fontSize:12, background:"#ffecec", color:"#d63031", fontWeight:800, borderRadius:6, padding:"3px 7px", marginLeft:10 }}>{product.off}</span>}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <select value={quantity} onChange={e => setQuantity(Number(e.target.value))} style={{ padding:"14px 40px 14px 16px", borderRadius:12, border:"1.5px solid #ddd", fontSize:15, fontWeight:600, cursor:"pointer", appearance:"none", background:"white url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"5\"><path d=\"M0 0l5 5 5-5z\" fill=\"%23666\"/></svg>') no-repeat right 14px center", flexShrink:0 }}>
+                      {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                    <button
+                      onClick={() => { for(let i=0; i<quantity; i++) onAdd(product.id); onClose(); }}
+                      style={{ flex:1, background:"linear-gradient(135deg, #E31937 0%, #B01030 100%)", color:"white", border:"none", borderRadius:28, padding:"14px 24px", fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 14px rgba(200,20,48,0.3)", transition:"transform 0.15s, box-shadow 0.15s" }}
+                      onMouseEnter={e => { e.target.style.transform="translateY(-1px)"; e.target.style.boxShadow="0 6px 18px rgba(200,20,48,0.35)"; }}
+                      onMouseLeave={e => { e.target.style.transform=""; e.target.style.boxShadow="0 4px 14px rgba(200,20,48,0.3)"; }}
+                    >Add to cart</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Product description images (from Shopify metafield) */}
+            {product.detailImages && product.detailImages.length > 0 && (
+              <div style={{ marginBottom:40 }}>
+                <h2 style={{ fontSize:18, fontWeight:800, marginBottom:16 }}>Product description images</h2>
+                <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                  {product.detailImages.map((imgUrl, i) => (
+                    <img key={i} src={imgUrl} alt={`${product.name} detail ${i+1}`} style={{ width:"100%", display:"block", borderRadius: i === 0 ? "12px 12px 0 0" : i === product.detailImages.length - 1 ? "0 0 12px 12px" : 0 }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fallback: if no detail images, show basic product info card */}
+            {(!product.detailImages || product.detailImages.length === 0) && (
+              <div style={{ marginBottom:40 }}>
+                <div style={{ background:"#fafafa", borderRadius:16, padding: isMobileModal ? "20px 16px" : "24px 28px" }}>
+                  <h3 style={{ fontSize:16, fontWeight:800, marginBottom:12, color:"#1a1a1a" }}>Product Information</h3>
+                  <div style={{ fontSize:13, lineHeight:2, color:"#444" }}>
+                    {[
+                      { label:"Brand", value: brandName },
+                      { label:"Size / Volume", value: product.size || "—" },
+                      { label:"Made in", value:"South Korea" },
+                      { label:"Price", value:"$" + product.price.toFixed(2) },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display:"flex", justifyContent:"space-between", borderBottom:"1px solid #eee", padding:"3px 0" }}>
+                        <span style={{ fontWeight:600 }}>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                    ))}
+                    {product.off && (
+                      <div style={{ display:"flex", justifyContent:"space-between", borderBottom:"1px solid #eee", padding:"3px 0" }}>
+                        <span style={{ fontWeight:600 }}>Discount</span>
+                        <span style={{ color:"#C41230", fontWeight:700 }}>{product.off}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Customers also considered */}
+            <section style={{ marginBottom:36 }}>
+              <h2 style={{ fontSize:18, fontWeight:800, marginBottom:16 }}>Customers also considered</h2>
+              <div style={{ display:"grid", gridTemplateColumns: isMobileModal ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap:12 }}>
+                {similarProducts.map(p => (
+                  <div key={p.id} style={{ background:"white", borderRadius:12, overflow:"hidden", cursor:"pointer", border:"1px solid #f0f0f0", transition:"box-shadow 0.15s, transform 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.transform = ""; }}
+                  >
+                    <div style={{ aspectRatio:"1", position:"relative", overflow:"hidden" }}>
+                      <img src={p.img} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                      <div style={{ position:"absolute", top:8, right:8 }}><AddBtn id={p.id} cart={cart} onAdd={onAdd} onRemove={onRemove} small /></div>
+                    </div>
+                    <div style={{ padding:"12px 14px" }}>
+                      <div style={{ fontSize:16, fontWeight:800, marginBottom:4 }}>${p.price.toFixed(2)}</div>
+                      <div style={{ fontSize:13, fontWeight:600, color:"#1a1a1a", marginBottom:3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
+                      <div style={{ fontSize:11, color:"#888" }}>{p.size}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Items to add next */}
+            <section style={{ marginBottom:36 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <h2 style={{ fontSize:18, fontWeight:800 }}>Items to add next</h2>
+                <div style={{ display:"flex", gap:6 }}>
+                  <button style={{ width:32, height:32, borderRadius:"50%", border:"1px solid #ddd", background:"white", cursor:"pointer", fontSize:14, color:"#888" }}>&lsaquo;</button>
+                  <button style={{ width:32, height:32, borderRadius:"50%", border:"1px solid #ddd", background:"white", cursor:"pointer", fontSize:14 }}>&rsaquo;</button>
+                </div>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns: isMobileModal ? "repeat(2, 1fr)" : "repeat(6, 1fr)", gap:10 }}>
+                {itemsToAddNext.map(p => (
+                  <div key={p.id} style={{ background:"white", borderRadius:12, overflow:"hidden", cursor:"pointer", border:"1px solid #f0f0f0", transition:"box-shadow 0.15s, transform 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.transform = ""; }}
+                  >
+                    <div style={{ aspectRatio:"1", position:"relative", overflow:"hidden" }}>
+                      <img src={p.img} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                      <div style={{ position:"absolute", top:6, right:6 }}><AddBtn id={p.id} cart={cart} onAdd={onAdd} onRemove={onRemove} small /></div>
+                    </div>
+                    <div style={{ padding:"10px 12px" }}>
+                      <div style={{ fontSize:14, fontWeight:800, marginBottom:3 }}>${p.price.toFixed(2)}</div>
+                      <div style={{ fontSize:11, fontWeight:600, color:"#1a1a1a", marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
+                      <div style={{ fontSize:10, color:"#888" }}>{p.size}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Warnings / Notice */}
+            <section style={{ marginBottom:32 }}>
+              <div style={{ background:"#fef9e7", borderRadius:12, padding:"16px 20px", display:"flex", gap:12, alignItems:"flex-start" }}>
+                <span style={{ fontSize:20 }}>&#9888;&#65039;</span>
+                <div>
+                  <div style={{ fontWeight:700, fontSize:15, marginBottom:6, color:"#92400e" }}>Notice</div>
+                  <p style={{ fontSize:14, color:"#78350f", margin:0, lineHeight:1.6 }}>Product information or packaging displayed may not be current or complete. Always refer to the physical product for the most accurate information. Individual results may vary.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Disclaimer */}
+            <div style={{ padding:20, background:"#f5f5f5", borderRadius:12, fontSize:12, color:"#666", lineHeight:1.6 }}>
+              <p>Product information or packaging displayed may not be current or complete. Always refer to the physical product for the most accurate information and warnings. <a href="#" style={{ color:"#C41230", fontWeight:600 }}>Learn more</a></p>
+              <p style={{ marginTop:8 }}>*Actual weight may vary based on seasonality and other factors. Estimated price is approximate and provided only for reference.</p>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        `}</style>
+      </div>
+    </>
+  );
+};
+
+// ── MAIN APP ───────────────────────────────────────────────────────────────
+function App() {
+  const [cart, setCart] = useState({ 5: 1, 6: 1, 7: 1 });
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [navActive, setNavActive] = useState("New Arrivals");
+  const [showMore, setShowMore] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchFocus, setSearchFocus] = useState(false);
+  const [freshlyMadeTab, setFreshlyMadeTab] = useState("gourmet");
+  const [topChartsTab, setTopChartsTab] = useState("selling");
+  const rootRef = useRef(null);
+  const cartBtnRef = useRef(null);
+  const winW = useContainerWidth(rootRef);
+
+  // ── fluid breakpoints (all derived from container width) ──
+  const isMobile  = winW > 0 && winW < 600;
+  const isTablet  = winW > 0 && winW < 920;
+  const sideW     = isMobile ? 0 : isTablet ? 64 : 220;
+  const contentW  = winW - sideW;
+  const rightPad  = isMobile ? 20 : Math.round(Math.min(64, contentW * 0.045));
+  const leftPad   = isMobile ? 20 : Math.round(Math.min(56, contentW * 0.04));
+
+  // ── flyer row: card count based on window width breakpoints ───
+  const visibleArea = contentW - leftPad - rightPad;
+  const flyerGap  = 10;
+  const N_flyer   = isMobile ? 2 : isTablet ? 3 :
+                    winW > 1920 ? 9 :
+                    winW > 1700 ? 8 :
+                    winW > 1500 ? 7 :
+                    winW > 1300 ? 6 :
+                    winW > 1100 ? 5 : 4;
+  const flyerW    = Math.round((visibleArea - flyerGap * (N_flyer - 1)) / N_flyer);
+  const visibleFlyerCount = N_flyer;
+  
+  const add = (id) => setCart((p) => ({ ...p, [id]: (p[id] || 0) + 1 }));
+  const remove = (id) => setCart((p) => { const n = { ...p }; if (n[id] <= 1) delete n[id]; else n[id]--; return n; });
+  
+  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const product = ALL_PRODUCTS.find(p => p.id === parseInt(id));
+    return sum + (product ? product.price * qty : 0);
+  }, 0);
+
+  const flyerStoreProducts = FLYER_STORES.flatMap(s => s.products);
+  const allProductsForModal = [...ALL_PRODUCTS, ...flyerStoreProducts];
+
+  const openProduct = (product) => setSelectedProduct(product);
+  const closeProduct = () => setSelectedProduct(null);
+  
+  const NAV_ITEMS = [
+    { icon: Icons.Sparkle, label: "New Arrivals" },
+    { icon: Icons.Utensils, label: "Food" },
+    { icon: Icons.Beauty, label: "Beauty" },
+    { icon: Icons.Home, label: "Home" },
+    { icon: Icons.Monitor, label: "Electronics" },
+    { icon: Icons.ChefHat, label: "Kitchen & Dining" },
+    { icon: Icons.Shirt, label: "Fashion" },
+    { icon: Icons.Dumbbell, label: "Wellness & Sports" },
+  ];
+  
+  const NAV_MORE = [
+    { icon: Icons.Baby, label: "Baby & Kids" },
+    { icon: Icons.Music, label: "K-POP" },
+    { icon: Icons.Drama, label: "K-Culture" },
+    { icon: Icons.Pencil, label: "Office Supplies" },
+    { icon: Icons.Pets, label: "Pets" },
+  ];
+  
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { overflow-y: scroll; }
+        body { font-family: 'Noto Sans KR', sans-serif; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d8d8d8; border-radius: 4px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        button:focus { outline: none; }
+        button, input { font-family: inherit; }
+      `}</style>
+      
+      <div ref={rootRef} style={{ display: "flex", minHeight: "100vh", background: "white" }}>
+        
+        {/* ── LEFT SIDEBAR ── */}
+        <aside style={{ width: isMobile ? 0 : isTablet ? 64 : 220, minWidth: isMobile ? 0 : isTablet ? 64 : 220, background: "white", borderRight: isMobile ? "none" : "1px solid #efefef", position: "sticky", top: 0, height: "100vh", overflowY: "auto", overflowX: "hidden", flexShrink: 0, display: isMobile ? "none" : "flex", flexDirection: "column", paddingLeft: isMobile ? 0 : 16 }}>
+          <div style={{ padding: isTablet ? "18px 8px" : "22px 18px 18px", borderBottom: "1px solid #f5f5f5", display: "flex", alignItems: "center", justifyContent: isTablet ? "center" : "flex-start", gap: 12 }}>
+            {!isTablet && <button onClick={() => setAccountOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center", color: "#333" }}><Icons.Menu size={22} sw={2.2} /></button>}
+            <img src={LOGO_IMG} alt="KWAVE24" onClick={() => setNavActive("New Arrivals")} style={{ height: isTablet ? 24 : 32, objectFit: "contain", cursor: "pointer" }} />
+          </div>
+          
+          <nav style={{ padding: isTablet ? "14px 4px" : "14px 12px", flex: 1 }}>
+            {NAV_ITEMS.map(({ icon: IconComp, label }) => {
+              const active = navActive === label;
+              return (
+                <div key={label} onClick={() => setNavActive(label)} style={{ padding: isTablet ? "10px 0" : "11px 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: isTablet ? "center" : "flex-start", gap: 12, borderRadius: 10, margin: "2px 0", fontWeight: active ? 700 : 500, fontSize: 14.5, color: active ? "#003d2b" : "#444", background: active ? "#eef9f3" : "transparent", transition: "all 0.15s" }}>
+                  <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><IconComp size={20} sw={active ? 2.4 : 2} /></span>{!isTablet && label}
+                </div>
+              );
+            })}
+            {showMore && NAV_MORE.map(({ icon: IconComp, label }) => {
+              const active = navActive === label;
+              return (
+                <div key={label} onClick={() => setNavActive(label)} style={{ padding: isTablet ? "10px 0" : "11px 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: isTablet ? "center" : "flex-start", gap: 12, borderRadius: 10, margin: "2px 0", fontWeight: active ? 700 : 500, fontSize: 14.5, color: active ? "#003d2b" : "#444", background: active ? "#eef9f3" : "transparent", transition: "all 0.15s" }}>
+                  <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><IconComp size={20} sw={active ? 2.4 : 2} /></span>{!isTablet && label}
+                </div>
+              );
+            })}
+            <div onClick={() => setShowMore(!showMore)} style={{ padding: isTablet ? "10px 0" : "11px 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: isTablet ? "center" : "flex-start", gap: 12, borderRadius: 10, margin: "2px 0", fontWeight: 500, fontSize: 14.5, color: "#444" }}>
+              <span style={{ flexShrink: 0, display: "flex", alignItems: "center", transform: showMore ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}><Icons.ChevronDown size={20} sw={2} /></span>{!isTablet && (showMore ? "Show less" : "Show more")}
+            </div>
+          </nav>
+          
+          <div style={{ height: 1, background: "#f0f0f0", margin: "0 16px" }} />
+          <div style={{ padding: isTablet ? "14px 4px 20px" : "14px 12px 20px" }}>
+            {!isTablet && <div style={{ padding: "6px 16px 8px", fontSize: 10, color: "#bbb", fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase" }}>You</div>}
+            {[{ icon: Icons.Newspaper, label: "Flyers", badge: "New" }, { icon: Icons.User, label: "Account" }].map(({ icon: IconComp, label, badge }) => {
+              const isActive = navActive === label;
+              return (
+                <div key={label} onClick={() => label === "Account" ? setAccountOpen(true) : setNavActive(label)} style={{ padding: isTablet ? "10px 0" : "11px 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: isTablet ? "center" : "flex-start", gap: 12, fontSize: 14.5, color: isActive ? "#003d2b" : "#444", borderRadius: 10, margin: "2px 0", fontWeight: isActive ? 700 : 500, background: isActive ? "#eef9f3" : "transparent", transition: "all 0.15s", position: "relative" }}>
+                  <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><IconComp size={20} sw={isActive ? 2.4 : 2} /></span>{!isTablet && label}
+                  {badge && !isActive && !isTablet && <span style={{ marginLeft: "auto", background: "linear-gradient(135deg, #C41230 0%, #8B0D25 100%)", color: "white", borderRadius: 20, fontSize: 9, fontWeight: 800, padding: "3px 9px" }}>{badge}</span>}
+                  {badge && !isActive && isTablet && <span style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: "#C41230" }} />}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+        
+        {/* ── MAIN CONTENT ── */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <header style={{ background: "white", borderBottom: "1px solid #f0f0f0", padding: isMobile ? "10px 16px" : "12px 32px", display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, position: "sticky", top: 0, zIndex: 50 }}>
+            {isMobile && (
+              <img src={LOGO_IMG} alt="KWAVE24" onClick={() => setNavActive("New Arrivals")} style={{ height: 26, objectFit: "contain", cursor: "pointer", flexShrink: 0 }} />
+            )}
+            <div style={{ flex: 1, position: "relative" }}>
+              <svg style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input value={search} onChange={(e) => setSearch(e.target.value)} onFocus={() => setSearchFocus(true)} onBlur={() => setSearchFocus(false)} placeholder={isMobile ? "Search..." : "Search products, stores, and recipes"} style={{ width: "100%", padding: isMobile ? "9px 12px 9px 36px" : "11px 14px 11px 40px", border: `2px solid ${searchFocus ? "#003d2b" : "#ebebeb"}`, borderRadius: 12, fontSize: 13.5, outline: "none", background: searchFocus ? "white" : "#f7f7f7", transition: "border-color 0.15s, background 0.15s" }} />
+            </div>
+            {!isMobile && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, color: "#333", cursor: "pointer", whiteSpace: "nowrap", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #ebebeb" }}>
+                <Icons.MapPin size={14} sw={2.2} /><span style={{ fontWeight: 500 }}>150 Grant Ave</span><span style={{ fontSize: 10, color: "#aaa", marginLeft: 1 }}>▼</span>
+              </div>
+            )}
+            <div style={{ position: "relative", flexShrink: 0 }} ref={cartBtnRef}>
+              <button onClick={() => setCartOpen(true)} style={{ background: cartCount > 0 ? "#003d2b" : "#f7f7f7", color: cartCount > 0 ? "white" : "#555", border: "none", borderRadius: 10, padding: cartCount > 0 ? "9px 16px" : "9px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13.5, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icons.ShoppingCart size={18} sw={2.5} />{cartCount > 0 ? <span style={{ fontWeight: 800 }}>{cartCount} item{cartCount > 1 ? "s" : ""}</span> : <span style={{ fontSize: 12 }}>Cart</span>}
+              </button>
+            </div>
+          </header>
+          
+          <div style={{ flex: 1, padding: `20px ${rightPad}px ${isMobile ? 80 : 100}px ${leftPad}px`, overflowY: "auto", background: "white" }}>
+            {navActive !== "Flyers" && (<>
+            {/* Hero App Banner */}
+            <section style={{ marginBottom: isMobile ? 16 : 24 }}>
+              <div style={{
+                display: "flex",
+                flexDirection: isTablet ? "column" : "row",
+                alignItems: isTablet ? "stretch" : "center",
+                justifyContent: "space-between",
+                padding: isMobile ? "16px 0" : "24px 0",
+                borderBottom: "1px solid #e5e5e5",
+                gap: isMobile ? 12 : isTablet ? 16 : 16
+              }}>
+                {/* Top row for tablet / Left for desktop - Tagline */}
+                <div style={{ flex: isTablet ? "none" : "0 1 auto", minWidth: 0 }}>
+                  <h1 style={{
+                    color: "#1a365d",
+                    fontSize: isMobile ? 24 : isTablet ? 28 : "clamp(22px, 3vw, 46px)",
+                    fontWeight: 800,
+                    margin: 0,
+                    lineHeight: 1.25,
+                    fontStyle: "italic",
+                    whiteSpace: isMobile ? "normal" : isTablet ? "normal" : "nowrap",
+                    textAlign: isTablet ? "center" : "left"
+                  }}>
+                    America's largest<br/>
+                    Korean online market
+                  </h1>
+                </div>
+
+                {/* Bottom row for tablet / Center+Right for desktop */}
+                {isTablet && !isMobile ? (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20 }}>
+                    <img src="images/delivery car-logo.jpg" alt="KWAVE24 Delivery" style={{ maxHeight: 140, objectFit: "contain", flex: "0 1 auto" }} />
+                  </div>
+                ) : !isMobile ? (
+                  <div style={{ flex: "1 1 auto", display: "flex", alignItems: "center", justifyContent: "flex-end", minWidth: 0 }}>
+                    <img src="images/delivery car-logo.jpg" alt="KWAVE24 Delivery" style={{ maxWidth: "100%", maxHeight: 276, objectFit: "contain", marginLeft: "auto", marginRight: "3%" }} />
+                  </div>
+                ) : null}
+
+                {/* Right - Download App Card (Weee! style) */}
+                <div style={{
+                  flex: "0 0 auto",
+                  display: "flex",
+                  alignItems: "center",
+                  alignSelf: isTablet ? "center" : "auto",
+                  gap: isMobile ? 10 : isTablet ? 10 : 14,
+                  background: "white",
+                  padding: isMobile ? "10px 12px" : isTablet ? "10px 12px" : "12px 16px",
+                  borderRadius: 16,
+                  border: "1px solid #e5e5e5",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+                }}>
+                  {/* QR Code - colorful like Weee! */}
+                  <div style={{ width: isMobile ? 64 : isTablet ? 68 : 88, height: isMobile ? 64 : isTablet ? 68 : 88, background: "white", padding: 4, borderRadius: 10, border: "1.5px solid #e0e0e0", flexShrink: 0 }}>
+                    <svg width="100%" height="100%" viewBox="0 0 80 80">
+                      <rect width="80" height="80" fill="white"/>
+                      {/* Top-left finder - blue */}
+                      <rect x="3" y="3" width="20" height="20" rx="2" fill="#1a365d"/>
+                      <rect x="6" y="6" width="14" height="14" rx="1.5" fill="white"/>
+                      <rect x="9" y="9" width="8" height="8" rx="1" fill="#1a365d"/>
+                      {/* Top-right finder - blue */}
+                      <rect x="57" y="3" width="20" height="20" rx="2" fill="#1a365d"/>
+                      <rect x="60" y="6" width="14" height="14" rx="1.5" fill="white"/>
+                      <rect x="63" y="9" width="8" height="8" rx="1" fill="#1a365d"/>
+                      {/* Bottom-left finder - blue */}
+                      <rect x="3" y="57" width="20" height="20" rx="2" fill="#1a365d"/>
+                      <rect x="6" y="60" width="14" height="14" rx="1.5" fill="white"/>
+                      <rect x="9" y="63" width="8" height="8" rx="1" fill="#1a365d"/>
+                      {/* Data dots - mixed colors for Weee!-like colorful QR */}
+                      <rect x="27" y="5" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="33" y="5" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="39" y="5" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="45" y="5" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="51" y="9" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="27" y="11" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="36" y="11" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="42" y="15" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="48" y="15" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="27" y="19" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="33" y="19" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      {/* Left column data */}
+                      <rect x="5" y="27" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="11" y="30" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="17" y="27" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="5" y="36" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="14" y="36" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="5" y="42" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="11" y="45" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="17" y="42" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="5" y="51" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="14" y="48" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      {/* Center - KWAVE24 logo */}
+                      <rect x="27" y="27" width="26" height="26" rx="5" fill="white"/>
+                      <rect x="30" y="30" width="20" height="20" rx="3" fill="#C41230"/>
+                      <text x="40" y="44" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" fontFamily="Arial">K24</text>
+                      {/* Right column data */}
+                      <rect x="57" y="27" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="63" y="30" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="69" y="27" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="57" y="36" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="66" y="36" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="60" y="42" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="69" y="42" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="72" y="48" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      {/* Bottom data */}
+                      <rect x="27" y="57" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="33" y="60" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="39" y="57" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="30" y="66" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="36" y="63" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="45" y="66" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="57" y="57" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="63" y="60" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="69" y="57" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="60" y="66" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                      <rect x="66" y="63" width="3.5" height="3.5" rx="0.7" fill="#C41230"/>
+                      <rect x="72" y="66" width="3.5" height="3.5" rx="0.7" fill="#0ea5e9"/>
+                      <rect x="69" y="72" width="3.5" height="3.5" rx="0.7" fill="#1a365d"/>
+                    </svg>
+                  </div>
+                  {/* Text info */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1a365d" strokeWidth="2.5" strokeLinecap="round"><path d="M7 8l5-5 5 5"/><path d="M12 3v13"/></svg>
+                      <span style={{ fontSize: 11.5, color: "#1a365d", fontWeight: 600 }}>Scan to</span>
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#1a365d", lineHeight: 1.2 }}>download app</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 4 }}>
+                      {[1,2,3,4,5].map(i => (
+                        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="#0ea5e9" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#C41230", fontWeight: 700 }}>1m+ reviews</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            {/* Promo Banners - 5 cards */}
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(5, 1fr)", gap: isMobile ? 8 : 12 }}>
+                <div style={{ borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
+                  <img src={BANNER_IMG1} alt="$20 off" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                <div style={{ borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
+                  <img src={BANNER_IMG2} alt="40% off" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                <div style={{ borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
+                  <img src={BANNER_IMG3} alt="Korean food week" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                <div style={{ borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
+                  <img src={BANNER_IMG4} alt="Spring Korean Cuisine" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                <div style={{ borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
+                  <img src={BANNER_IMG5} alt="Thursday Last Call" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              </div>
+            </section>
+            
+            {/* Glow In Bloom */}
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ background: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)", borderRadius: 16, padding: isMobile ? "16px 16px" : "20px 28px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ background: "#22c55e", color: "white", padding: "8px 14px", borderRadius: 8, fontWeight: 700, fontSize: 12 }}>Free gift</div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "#9333ea", fontWeight: 600 }}>Glow In Bloom · Feb 27th → Apr 2nd</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#1e1e1e" }}>Glow Up Your Look & Space</div>
+                    <div style={{ fontSize: 13, color: "#555" }}>Beauty, laundry & home fragrance</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ background: "#f97316", color: "white", padding: "10px 14px", borderRadius: 8, textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 800 }}>$5 off</div>
+                    <div style={{ fontSize: 10 }}>Buy $32 (Selected)</div>
+                  </div>
+                  <button style={{ width: 44, height: 44, borderRadius: "50%", background: "white", border: "none", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", cursor: "pointer", fontSize: 18 }}>›</button>
+                </div>
+              </div>
+            </section>
+            
+            {/* Product Sections - matching left sidebar categories */}
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Food" sub="Korean Food & Snacks" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {FOOD.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Beauty" sub="K-Beauty Essentials" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {BEAUTY.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Home" sub="Home & Living" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {HOME.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Electronics" sub="Tech & Gadgets" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {ELECTRONICS.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Kitchen & Dining" sub="Cookware & Tableware" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {KITCHEN.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Fashion" sub="Korean Style" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {FASHION.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Wellness & Sports" sub="Health & Fitness" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {WELLNESS.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Baby & Kids" sub="For Little Ones" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {BABY_KIDS.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="K-POP" sub="Albums & Merch" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {KPOP.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="K-Culture" sub="Korean Heritage" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {KCULTURE.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Office Supplies" sub="Cute & Functional" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {OFFICE.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Pets" sub="For Furry Friends" cta="See all deals" />
+              <div style={{ display:"flex", gap:flyerGap, overflow:"hidden" }}>
+                {PETS.slice(0, visibleFlyerCount).map(p => (
+                  <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                ))}
+              </div>
+            </section>
+            </>)}
+
+            {/* ── FLYERS CONTENT ── */}
+            {navActive === "Flyers" && (
+            <>
+              <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:24 }}>
+                <div>
+                  <h1 style={{ fontSize: isMobile ? 22 : 28, fontWeight:800, color:"#111", marginBottom:6 }}>Flyers</h1>
+                  <p style={{ fontSize:13, color:"#888" }}>
+                    Best deals from your favorite Korean stores.
+                    <span style={{ marginLeft:4, cursor:"pointer" }}>&oplus;</span>
+                  </p>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer", color:"#111", fontSize:14, fontWeight:600 }}>
+                  <span style={{ fontSize:16 }}>&#128276;</span>
+                  Notifications
+                </div>
+              </div>
+
+              {FLYER_STORES.map(store => (
+                <section key={store.id} style={{ marginBottom:40 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                      <div style={{ width:44, height:44, background: store.color, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontWeight:900, fontSize:11 }}>
+                        {store.name.slice(0,2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:16, color:"#111" }}>{store.name}</div>
+                        <div style={{ fontSize:13, color:"#666" }}>Flyer deals {store.dateRange}</div>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                      <span style={{ fontSize:14, fontWeight:600, color:"#C41230", cursor:"pointer" }}>Shop flyer &rsaquo;</span>
+                      <div style={{ display:"flex", gap:6 }}>
+                        <button style={{ width:32, height:32, borderRadius:"50%", border:"1px solid #ddd", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#888" }}>&lsaquo;</button>
+                        <button style={{ width:32, height:32, borderRadius:"50%", border:"1px solid #ddd", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#888" }}>&rsaquo;</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display:"flex", gap:flyerGap, overflowX:"auto" }} className="hide-scrollbar">
+                    <div style={{ width:flyerW, minWidth:flyerW, height: flyerW * 1.5, borderRadius:18, overflow:"hidden", background:`linear-gradient(180deg, ${store.color}22 0%, ${store.color}44 100%)`, display:"flex", flexDirection:"column", justifyContent:"flex-end", position:"relative", cursor:"pointer", flexShrink:0, border:"1px solid #e8e8e8" }}>
+                      <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <div style={{ width: flyerW * 0.5, height: flyerW * 0.5, background: store.color, borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontWeight:900, fontSize: flyerW * 0.1 }}>
+                          {store.name.slice(0,3).toUpperCase()}
+                        </div>
+                      </div>
+                      <div style={{ background: store.color, color:"white", padding:"10px 16px", textAlign:"center", fontWeight:700, fontSize:13 }}>{store.dateRange}</div>
+                    </div>
+                    {store.products.slice(0, 10).map(p => (
+                      <FlyerCard key={p.id} p={p} onAdd={add} onRemove={remove} cart={cart} w={flyerW} onClick={openProduct} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </>
+            )}
+            
+            <section style={{ marginBottom: 44 }}>
+              <SectionHeader title="Featured Reviews" cta="More" />
+              <div style={{ display: "flex", gap: flyerGap }}>
+                {FEATURED_REVIEWS.slice(0, visibleFlyerCount).map((r) => <ReviewCard key={r.id} review={r} onAdd={add} w={flyerW} />)}
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+      
+      {/* Account Panel */}
+      {accountOpen && (
+        <>
+          <div onClick={() => setAccountOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, animation: "fadeIn 0.2s ease" }} />
+          <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 320, background: "white", zIndex: 201, overflowY: "auto", boxShadow: "4px 0 24px rgba(0,0,0,0.15)", animation: "slideInLeft 0.25s ease" }}>
+            {/* Header */}
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#E31937", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 16 }}>W</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>wonsil j.</div>
+                  <div style={{ fontSize: 12, color: "#888" }}>Customer since May 2021</div>
+                </div>
+              </div>
+              <button onClick={() => setAccountOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, color: "#666" }}><Icons.X size={22} sw={2} /></button>
+            </div>
+
+            {/* Promo Banner */}
+            <div style={{ margin: "16px 20px", padding: "14px 18px", background: "#E31937", borderRadius: 12, color: "white" }}>
+              <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 4 }}>KWAVE24+ perk alert!</div>
+              <div style={{ fontSize: 11, opacity: 0.9, lineHeight: 1.4 }}>$0 delivery fee on grocery and retail orders of $10+. Service fees apply. $35 min. for Costco.</div>
+            </div>
+
+            {/* Menu Sections */}
+            <div style={{ padding: "12px 8px" }}>
+              <div style={{ padding: "8px 16px", fontSize: 10, color: "#999", fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase" }}>Manage your account</div>
+              {[
+                { icon: Icons.Store, label: "Stores", active: true },
+                { icon: Icons.Package, label: "Your orders" },
+                { icon: Icons.List, label: "Your lists" },
+                { icon: Icons.Heart, label: "Your recipes" },
+                { icon: Icons.Settings, label: "Your account settings" },
+                { icon: Icons.Zap, label: "Try KWAVE24+" },
+                { icon: Icons.User, label: "Start a family account" },
+              ].map(({ icon: IconComp, label, active }) => (
+                <div key={label} style={{
+                  padding: "12px 16px", display: "flex", alignItems: "center", gap: 14,
+                  cursor: "pointer", borderRadius: 10, margin: "2px 0",
+                  background: active ? "#eef9f3" : "transparent",
+                  color: active ? "#003d2b" : "#333", fontWeight: active ? 700 : 500, fontSize: 14,
+                }}>
+                  <IconComp size={20} sw={active ? 2.4 : 2} />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ height: 1, background: "#f0f0f0", margin: "8px 20px" }} />
+
+            <div style={{ padding: "12px 8px" }}>
+              <div style={{ padding: "8px 16px", fontSize: 10, color: "#999", fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase" }}>Credits and promos</div>
+              {[
+                { icon: Icons.Gift, label: "Invite friends, earn money", highlight: true },
+                { icon: Icons.CreditCard, label: "Buy gift cards" },
+                { icon: Icons.Tag, label: "Credits, promos, and gift cards" },
+                { icon: Icons.CreditCard, label: "Apply: KWAVE24 Mastercard" },
+              ].map(({ icon: IconComp, label, highlight }) => (
+                <div key={label} style={{
+                  padding: "12px 16px", display: "flex", alignItems: "center", gap: 14,
+                  cursor: "pointer", borderRadius: 10, margin: "2px 0",
+                  color: highlight ? "#E31937" : "#333", fontWeight: 500, fontSize: 14,
+                }}>
+                  <IconComp size={20} sw={2} />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ height: 1, background: "#f0f0f0", margin: "8px 20px" }} />
+
+            <div style={{ padding: "12px 8px" }}>
+              <div style={{ padding: "8px 16px", fontSize: 10, color: "#999", fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase" }}>Support</div>
+              {[
+                { icon: Icons.HelpCircle, label: "Help Center" },
+                { icon: Icons.HelpCircle, label: "How KWAVE24 works" },
+              ].map(({ icon: IconComp, label }) => (
+                <div key={label} style={{
+                  padding: "12px 16px", display: "flex", alignItems: "center", gap: 14,
+                  cursor: "pointer", borderRadius: 10, margin: "2px 0",
+                  color: "#333", fontWeight: 500, fontSize: 14,
+                }}>
+                  <IconComp size={20} sw={2} />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ height: 1, background: "#f0f0f0", margin: "8px 20px" }} />
+
+            <div style={{ padding: "12px 8px 24px" }}>
+              <div style={{ padding: "8px 16px", fontSize: 10, color: "#999", fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase" }}>Our apps</div>
+              {[
+                { icon: Icons.ShoppingBag, label: "App Store" },
+                { icon: Icons.ShoppingBag, label: "Google Play" },
+              ].map(({ icon: IconComp, label }) => (
+                <div key={label} style={{
+                  padding: "12px 16px", display: "flex", alignItems: "center", gap: 14,
+                  cursor: "pointer", borderRadius: 10, margin: "2px 0",
+                  color: "#333", fontWeight: 500, fontSize: 14,
+                }}>
+                  <IconComp size={20} sw={2} />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            {/* Log out */}
+            <div style={{ padding: "12px 8px 24px" }}>
+              <div style={{
+                padding: "12px 16px", display: "flex", alignItems: "center", gap: 14,
+                cursor: "pointer", borderRadius: 10, margin: "2px 0",
+                color: "#E31937", fontWeight: 600, fontSize: 14,
+              }}>
+                <Icons.X size={20} sw={2} />
+                Log out
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <ProductDetailModal 
+          product={selectedProduct} 
+          onClose={closeProduct} 
+          cart={cart} 
+          onAdd={add} 
+          onRemove={remove}
+          allProducts={allProductsForModal}
+        />
+      )}
+
+      {/* Cart Panel */}
+      {cartOpen && (
+        <>
+          <div onClick={() => setCartOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, animation: "fadeIn 0.2s ease" }} />
+          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: isMobile ? "90%" : 400, background: "white", zIndex: 201, boxShadow: "-4px 0 24px rgba(0,0,0,0.15)", animation: "slideInRight 0.25s ease", display: "flex", flexDirection: "column" }}>
+            {/* Header */}
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button onClick={() => setCartOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#555", display: "flex", alignItems: "center", fontSize: 14 }}><Icons.X size={20} sw={2} /></button>
+                <span style={{ fontWeight: 600, fontSize: 14, color: "#111" }}>Personal KWAVE24 Cart</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>Shopping in 94306</div>
+            </div>
+
+            {/* Store badge and total */}
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, background: "#C41230", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 7, color: "white", lineHeight: 1.1, textAlign: "center", flexShrink: 0 }}>KWAVE<br/>24</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "#111" }}>KWAVE24</div>
+                <div style={{ fontSize: 12, color: "#888" }}>Today, 11am</div>
+              </div>
+              <span style={{ fontWeight: 800, fontSize: 16, color: "#111" }}>${cartTotal.toFixed(2)}</span>
+            </div>
+
+            {/* Cart Content */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
+              {cartCount === 0 ? (
+                <div style={{ textAlign: "center", padding: "60px 20px" }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: "#111", marginBottom: 8 }}>Your cart is empty</div>
+                  <div style={{ fontSize: 14, color: "#888" }}>Start shopping to add items</div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    {Object.entries(cart).map(([id, qty]) => {
+                      const product = ALL_PRODUCTS.find(p => p.id === Number(id));
+                      if (!product) return null;
+                      return (
+                        <div key={id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #f0f0f0" }}>
+                          <div style={{ width: 52, height: 52, background: "#fff", borderRadius: 8, border: "1px solid #e8e8e8", overflow: "hidden", flexShrink: 0 }}>
+                            <img src={product.img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{product.name}</div>
+                            <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>${product.price.toFixed(2)}</div>
+                            <button style={{ fontSize: 12, color: "#C41230", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                              <span>↻</span> Choose replacement
+                            </button>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                            <button onClick={() => remove(Number(id))} style={{ width: 32, height: 32, borderRadius: "50%", border: "1.5px solid #ddd", background: "white", cursor: "pointer", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", color: "#333" }}>−</button>
+                            <span style={{ fontWeight: 700, fontSize: 15, minWidth: 24, textAlign: "center" }}>{qty}</span>
+                            <button onClick={() => add(Number(id))} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: "#C41230", color: "white", cursor: "pointer", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Make this order a gift */}
+                  <div style={{ padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f0f0f0" }}>
+                    <span style={{ fontSize: 13, color: "#555", display: "flex", alignItems: "center", gap: 8 }}>🎁 Make this order a gift</span>
+                    <div style={{ width: 42, height: 24, background: "#d1d5db", borderRadius: 12, cursor: "pointer", position: "relative" }}>
+                      <div style={{ width: 20, height: 20, background: "white", borderRadius: "50%", position: "absolute", top: 2, left: 2, boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                    </div>
+                  </div>
+
+                  {/* Complete your cart */}
+                  <div style={{ marginTop: 16, paddingBottom: 20 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Complete your cart</div>
+                    <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>Based on items in your cart</div>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(3,1fr)", gap: 10 }}>
+                      {ALL_PRODUCTS.filter(p => !cart[p.id]).slice(0, isMobile ? 6 : 9).map(s => (
+                        <div key={s.id} style={{ display: "flex", flexDirection: "column" }}>
+                          <div style={{ position: "relative", width: "100%", paddingBottom: "100%", background: "#f8f7f4", borderRadius: 8, overflow: "hidden" }}>
+                            <img src={s.img} alt={s.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                            <div style={{ position: "absolute", top: 4, right: 4 }}>
+                              <button onClick={() => add(s.id)} style={{ width: 24, height: 24, borderRadius: "50%", background: "#C41230", border: "none", color: "white", fontWeight: 800, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>+</button>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 800, marginTop: 4 }}>${s.price.toFixed(2)}</div>
+                          <div style={{ fontSize: 10, color: "#444", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.name}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Sticky Footer with checkout */}
+            {cartCount > 0 && (
+              <div style={{ padding: "16px 20px 24px", borderTop: "1px solid #e8e8e8", background: "white", flexShrink: 0 }}>
+                {(() => {
+                  const freeDeliveryThreshold = 35;
+                  const remaining = Math.max(0, freeDeliveryThreshold - cartTotal);
+                  const isFree = cartTotal >= freeDeliveryThreshold;
+                  const progress = Math.min(100, (cartTotal / freeDeliveryThreshold) * 100);
+                  return (
+                    <div style={{ background: isFree ? "#1a1a1a" : "#f0f0f0", borderRadius: 30, padding: "12px 16px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background 0.3s" }}>
+                      <div style={{ flex: 1, marginRight: 12 }}>
+                        <div style={{ fontSize: 13, color: isFree ? "white" : "#333", fontWeight: 600 }}>
+                          {isFree ? "You're getting $0 delivery fee" : "Add $" + remaining.toFixed(2) + " to get $0 delivery fee"}
+                        </div>
+                        {!isFree && (
+                          <div style={{ marginTop: 6, height: 4, background: "#ddd", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ width: progress + "%", height: "100%", background: "#C41230", borderRadius: 2, transition: "width 0.3s" }} />
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, color: isFree ? "white" : "#C41230", fontWeight: 800, fontSize: 14 }}>
+                        <Icons.ShoppingCart size={18} sw={2.5} />
+                        {cartCount}
+                      </div>
+                    </div>
+                  );
+                })()}
+                <button style={{ width: "100%", background: "#C41230", color: "white", border: "none", borderRadius: 28, padding: "16px 20px", fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span>Go to checkout</span>
+                  <span>${cartTotal.toFixed(2)}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <nav style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+          background: "white", borderTop: "1px solid #e5e5e5",
+          display: "flex", justifyContent: "space-around", alignItems: "center",
+          padding: "8px 0 env(safe-area-inset-bottom, 8px)",
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.05)"
+        }}>
+          {[
+            { icon: Icons.Home, label: "Home", nav: "New Arrivals" },
+            { icon: Icons.Newspaper, label: "Flyers", nav: "Flyers" },
+            { icon: Icons.ShoppingCart, label: "Cart", action: () => setCartOpen(true) },
+            { icon: Icons.Package, label: "Orders" },
+            { icon: Icons.User, label: "Account", action: () => setAccountOpen(true) }
+          ].map(({ icon: IconComp, label, nav, action }) => {
+            const isActive = nav && navActive === nav;
+            return (
+              <button key={label} onClick={() => action ? action() : nav ? setNavActive(nav) : null} style={{
+                background: "none", border: "none", cursor: "pointer",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                padding: "4px 12px", color: isActive ? "#C41230" : "#888",
+                position: "relative"
+              }}>
+                <IconComp size={22} sw={isActive ? 2.4 : 1.8} />
+                <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500 }}>{label}</span>
+                {label === "Cart" && cartCount > 0 && (
+                  <span style={{ position: "absolute", top: 0, right: 6, background: "#C41230", color: "white", fontSize: 9, fontWeight: 800, borderRadius: 10, padding: "1px 5px", minWidth: 16, textAlign: "center" }}>{cartCount}</span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      )}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+  </script>
+</body>
+</html>
