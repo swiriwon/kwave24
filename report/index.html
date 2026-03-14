@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 모바일 브라우저 테마 컬러 설정 -->
+    <meta name="theme-color" content="#020617">
+    <title>K-Live 글로벌 통합 비즈니스 플랜</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --neon-green: #a3e635;
+            --deep-navy: #020617;
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-400: #94a3b8;
+            --white: #f8fafc;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--deep-navy); }
+        ::-webkit-scrollbar-thumb { background: var(--slate-800); border-radius: 10px; }
+
+        body {
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            scroll-behavior: smooth;
+        }
+
+        /* A4 Mobile Container */
+        .page {
+            background-color: var(--deep-navy);
+            width: 100%;
+            max-width: 500px;
+            min-height: 100vh;
+            padding: 40px 24px;
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 2px solid var(--neon-green);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography */
+        h1 { font-size: 38px; font-weight: 800; line-height: 1.2; margin: 0; }
+        h1 span { color: var(--neon-green); }
+        h2 { font-size: 28px; color: var(--neon-green); margin: 0 0 20px 0; border-bottom: 1px solid rgba(163, 230, 53, 0.3); padding-bottom: 10px; }
+        h3 { font-size: 20px; color: var(--white); margin: 0 0 10px 0; }
+        p { font-size: 16px; line-height: 1.6; color: #cbd5e1; margin: 0 0 15px 0; }
+
+        .tag {
+            display: inline-block;
+            background: rgba(163, 230, 53, 0.1);
+            color: var(--neon-green);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        /* Interactive Links */
+        .external-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(163, 230, 53, 0.15);
+            color: var(--neon-green);
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            border: 1px solid rgba(163, 230, 53, 0.3);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .external-link:active {
+            background: var(--neon-green);
+            color: var(--deep-navy);
+        }
+
+        /* Layout Elements */
+        .card {
+            background: var(--slate-800);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            background: rgba(163, 230, 53, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .icon-box i { color: var(--neon-green); font-size: 24px; }
+
+        /* Hub-Spoke Visual */
+        .hub-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 0;
+        }
+        .main-hub {
+            background: var(--neon-green);
+            color: var(--deep-navy);
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(163, 230, 53, 0.4);
+        }
+        .spoke-line {
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(to bottom, var(--neon-green), transparent);
+        }
+        .spoke-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+        .spoke-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(163, 230, 53, 0.2);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--neon-green);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #a3e635 0%, #4d7c0f 100%);
+            color: var(--deep-navy);
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+        .highlight-box h3 { color: var(--deep-navy); font-weight: 800; margin-bottom: 8px; }
+
+        .footer {
+            margin-top: auto;
+            padding: 40px 0 20px 0;
+            text-align: center;
+            font-size: 12px;
+            color: var(--slate-400);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* --- PDF 인쇄 스타일 및 버튼 --- */
+        .pdf-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--neon-green);
+            color: var(--deep-navy);
+            border: none;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(163, 230, 53, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+        .pdf-btn:hover { transform: scale(1.05); }
+
+        /* 커스텀 메시지 박스 */
+        #msg-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        @media print {
+            @page { 
+                margin: 0; 
+                size: auto; 
+            }
+            body { 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                background-color: var(--deep-navy) !important;
+            }
+            .pdf-btn, #msg-box { display: none !important; }
+            .page { 
+                max-width: 100%; 
+                margin: 0; 
+                page-break-after: always; 
+                border: none; 
+                border-radius: 0;
+            }
+            .page:last-child { page-break-after: auto; }
+            * { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="msg-box">⚠️ 보안 환경에서는 작동하지 않습니다.<br>파일을 내려받아 크롬에서 실행해 주세요.</div>
+
+<!-- PDF 다운로드 버튼 -->
+<button class="pdf-btn" onclick="handlePdfDownload()">
+    <i class="fa-solid fa-file-pdf"></i> PDF 저장
+</button>
+
+<script>
+    function handlePdfDownload() {
+        try {
+            // 인쇄 창 호출
+            window.print();
+        } catch (e) {
+            // Preview 환경에서 차단될 경우 메시지 표시
+            const box = document.getElementById('msg-box');
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 4000);
+        }
+    }
+</script>
+
+<!-- 페이지 1: 커버 및 비전 -->
+<div class="page" id="page1">
+    <div class="tag">Confidential Report</div>
+    <h1>글로벌 <br><span>K-Live</span><br>통합 생태계</h1>
+    <p class="subtitle" style="font-size: 18px; margin-top: 15px;">1,000만 팬덤의 트래픽을 <br>10조 원의 가치로 전환하는 <br>하이퍼 커머스 플랫폼</p>
+
+    <div class="hub-container" style="margin-top: 30px;">
+        <div class="main-hub">K-Live (트래픽)</div>
+        <div class="spoke-line"></div>
+        <div class="spoke-grid">
+            <div class="spoke-item">kwave24 (물류)</div>
+            <div class="spoke-item">KwaveGo (유통)</div>
+            <div class="spoke-item">Hit Food (푸드)</div>
+            <div class="spoke-item">Goodpay (금융)</div>
+            <div class="spoke-item">kwave.ai (지능)</div>
+            <div class="spoke-item">Nouv (상장사)</div>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <h3>Vision 2026</h3>
+        <p style="color: rgba(0,0,0,0.8); margin:0;">"검색하는 쇼핑의 시대는 끝났습니다. 이제 즐기다가 24분 만에 받는 K-Live 생태계의 시대입니다."</p>
+    </div>
+
+    <!-- 내부 링크 (목차) -->
+    <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
+        <a href="#page2" class="external-link" style="justify-content: space-between;">01. 핵심 엔진 상세 <i class="fa-solid fa-arrow-down"></i></a>
+        <a href="#page3" class="external-link" style="justify-content: space-between;">02. 지능 및 글로벌 유통 <i class="fa-solid fa-arrow-down"></i></a>
+        <a href="#page4" class="external-link" style="justify-content: space-between;">03. 푸드 및 금융 인프라 <i class="fa-solid fa-arrow-down"></i></a>
+    </div>
+
+    <div class="footer">
+        <p>© 2024 kwave24 Global Holdings.</p>
+    </div>
+</div>
+
+<!-- 페이지 2: 핵심 엔진 -->
+<div class="page" id="page2">
+    <h2>01. 핵심 엔진: K-Live</h2>
+    <div class="card">
+        <div class="icon-box"><i class="fa-brands fa-apple"></i></div>
+        <h3>글로벌 K-Live 앱</h3>
+        <p>전 세계 팬덤이 모이는 숏폼 커머스 플랫폼입니다. 실시간 소통과 즉각적 구매가 일어납니다.</p>
+        <a href="https://apps.apple.com/us/app/k-live/id6748845718" class="external-link" target="_blank">
+            <i class="fa-brands fa-apple"></i> App Store 보기
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="icon-box"><i class="fa-solid fa-bolt"></i></div>
+        <h3>24분 배송: kwave24</h3>
+        <p>아마존보다 빠른 하이퍼 로컬 물류 시스템. 도심형 MFC 기반의 24분 배송을 구현합니다.</p>
+        <a href="https://kwave24.com/" class="external-link" target="_blank">
+            <i class="fa-solid fa-link"></i> kwave24.com
+        </a>
+    </div>
+    
+    <a href="#page1" class="external-link" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--slate-400); margin-top: auto;"><i class="fa-solid fa-arrow-up"></i> 처음으로</a>
+</div>
+
+<!-- 페이지 3: 지능 및 유통 -->
+<div class="page" id="page3">
+    <h2>02. 지능 및 글로벌 유통</h2>
+    <div class="card">
+        <div class="icon-box"><i class="fa-solid fa-microchip"></i></div>
+        <h3>AI 엔진: Kwave.ai</h3>
+        <p>피부 분석, 개인화 큐레이션 및 글로벌 물류 수요 예측을 담당하는 지능형 두뇌입니다.</p>
+        <a href="https://Kwave.ai" class="external-link" target="_blank">
+            <i class="fa-solid fa-link"></i> Kwave.ai 접속
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="icon-box"><i class="fa-solid fa-globe"></i></div>
+        <h3>B2B 유통: KwaveGo</h3>
+        <p>전 세계 23만 개 소매점 인프라와 연결되는 B2B 글로벌 채널 확장 플랫폼입니다.</p>
+        <a href="https://kwavego.com/" class="external-link" target="_blank">
+            <i class="fa-solid fa-link"></i> kwavego.com
+        </a>
+    </div>
+    
+    <a href="#page1" class="external-link" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--slate-400); margin-top: auto;"><i class="fa-solid fa-arrow-up"></i> 처음으로</a>
+</div>
+
+<!-- 페이지 4: 푸드 및 금융 -->
+<div class="page" id="page4">
+    <h2>03. 푸드 및 금융 인프라</h2>
+    <div class="card">
+        <div class="icon-box"><i class="fa-solid fa-utensils"></i></div>
+        <h3>푸드테크: Hit The Food</h3>
+        <p>K-식자재 유통 및 글로벌 K-푸드 프랜차이즈 수직 계열화를 완성합니다.</p>
+        <a href="https://hitthefood.com/" class="external-link" target="_blank">
+            <i class="fa-solid fa-link"></i> hitthefood.com
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="icon-box"><i class="fa-solid fa-credit-card"></i></div>
+        <h3>핀테크: Goodpay.ai</h3>
+        <p>생태계 내 모든 결제와 24시간 초고속 정산을 책임지는 통합 금융 운영체제입니다.</p>
+        <a href="https://goodpay.ai" class="external-link" target="_blank">
+            <i class="fa-solid fa-link"></i> goodpay.ai
+        </a>
+    </div>
+
+    <div class="card" style="border-color: var(--neon-green);">
+        <h3>상장사 결합: Nouv Legacy</h3>
+        <p>Nouv와의 결합을 통해 자본 시장의 신뢰를 확보하고 대규모 증자 기반을 구축합니다.</p>
+    </div>
+
+    <a href="#page1" class="external-link" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--slate-400); width: 100%; justify-content: center; margin-top: auto;"><i class="fa-solid fa-arrow-up"></i> 처음으로 돌아가기</a>
+    
+    <div class="footer">
+        <p>© 2024 kwave24 Global Holdings. All Rights Reserved.</p>
+    </div>
+</div>
+
+</body>
+</html>
